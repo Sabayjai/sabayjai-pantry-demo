@@ -23,6 +23,16 @@ SADF ไม่ใช่ขั้นตอนบังคับแบบเส้
 - **Human เป็นผู้ตัดสินใจ:** ถือเป้าหมาย ขอบเขต และการตรวจรับผลงาน (Acceptance)
 - **AI เป็นผู้ช่วยและผู้ลงมือ:** เสนอทางเลือก ร่างเอกสาร และเขียนโค้ดตามกรอบที่ตกลงกัน
 
+### Agent ที่มีในโปรเจกต์นี้ (`.claude/agents/`)
+
+| Agent | Phase | ผลลัพธ์หลัก |
+|---|---|---|
+| `requirements-analyst` | 1 · เตรียม Requirement | `docs/requirements/*.md` (User Story + เกณฑ์ตรวจรับ + Open Questions) |
+| `design-architect` | 2 · ออกแบบ | `docs/design/*.md` + แบบร่าง UX/UI + `docs/design/ux-ui/prototype.html` |
+| `implementer` | 3 · ลงมือพัฒนา | โค้ดใน `src/**` + เทสต์ + หลักฐานตรวจรับใน `docs/work/R00x/02-result.md` |
+
+ทุก Agent ใช้ **Asking Protocol** ร่วมกัน ([asking-protocol.md](asking-protocol.md)) — ถามในแชท กวาดให้ครบก่อน แล้วชุดละไม่เกิน 4 ข้อ · และ **ไม่มี Agent ใดตั้งสถานะงานเป็น Accepted เองได้** (การรับรองเป็นของเจ้าของโปรเจกต์)
+
 ---
 
 ## 3. หลักสำคัญที่ต้องยึดถือ
