@@ -1,2 +1,14 @@
 # Freebuff (local agent workspace metadata)
 .freebuff/
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+coverage/
+*.log
+npm-debug.log*
+
+# ไฟล์ของระบบปฏิบัติการ
+.DS_Store
+Thumbs.db

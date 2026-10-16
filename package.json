@@ -1,0 +1,18 @@
+{
+  "name": "sabayjai-pantry",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ระบบสต็อกของกินในบ้าน (เดโมสาธิต) — Vite + Vanilla JS ไม่มี Backend",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

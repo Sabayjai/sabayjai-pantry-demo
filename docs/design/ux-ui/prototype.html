@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แบบร่าง UX/UI · สบายใจ Pantry (Draft)</title>
+<!--
+  แบบร่าง UX/UI (R001 · S3 · Task 4–7) — ไฟล์เดียว ไม่มี dependency ไม่มี build
+  ใช้ตรวจ "หน้าตา · องค์ประกอบ · ถ้อยคำไทย · การไหลของเส้นทาง" ก่อนสร้างจอจริง
+  คู่กับเอกสาร: docs/design/sabayjai-pantry-ux-ui.md
+  ข้อมูลทั้งหมดเป็นข้อมูลสมมติในหน่วยความจำ (รีเฟรช = กลับค่าเริ่มต้น)
+-->
+<style>
+  :root{
+    --sj-bg:#f6f7f9;
+    --sj-surface:#ffffff;
+    --sj-surface-2:#eef1f5;
+    --sj-border:#dbe1e8;
+    --sj-text:#1f2933;
+    --sj-text-muted:#64748b;
+    --sj-primary:#1f7a5a;
+    --sj-primary-weak:#e6f4ee;
+    --sj-danger:#c0392b;
+    --sj-danger-weak:#fdecea;
+    --sj-warn:#8a5a00;
+    --sj-warn-weak:#fff6e0;
+    --sj-warn-border:#e5a00d;
+    --sj-radius:12px;
+    --sj-radius-sm:8px;
+    --sj-tap:44px;
+    --sj-font:system-ui,-apple-system,"Segoe UI","Noto Sans Thai",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--sj-bg);color:var(--sj-text);font:16px/1.55 var(--sj-font)}
+  h1,h2,h3,p{margin:0}
+  a{color:inherit}
+
+  /* ---------- แถบเตือนว่าเป็นแบบร่าง ---------- */
+  .draft{background:#111827;color:#fff;font-size:12px;line-height:1.5;padding:8px 12px}
+  .draft b{color:#ffd479}
+  .draft .hint{opacity:.85;display:block;margin-top:2px}
+
+  /* ---------- shell: หัวเรื่อง + เมนู ---------- */
+  .wrap{max-width:960px;margin:0 auto;padding:0 16px}
+  .topbar{position:sticky;top:0;z-index:6;background:var(--sj-surface);box-shadow:0 1px 0 var(--sj-border)}
+  .app-header{background:var(--sj-surface);border-bottom:1px solid var(--sj-border)}
+  .app-header .wrap{display:flex;align-items:center;gap:12px;min-height:56px;padding-top:8px;padding-bottom:8px}
+  .app-header h1{font-size:20px;font-weight:700;flex:1}
+  .nav{background:var(--sj-surface)}
+  .nav .wrap{display:flex;gap:8px;overflow-x:auto;padding-top:8px;padding-bottom:8px;scrollbar-width:thin}
+  .nav a{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:var(--sj-surface-2);color:var(--sj-text);text-decoration:none;font-size:14px;min-height:var(--sj-tap)}
+  .nav a[aria-current="page"]{background:var(--sj-primary);color:#fff}
+  .nav a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--sj-primary);outline-offset:2px}
+
+  main{padding:16px 0 110px}
+  .foot{max-width:960px;margin:0 auto;padding:0 16px 24px;color:var(--sj-text-muted);font-size:12px}
+
+  /* ---------- ปุ่ม ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:var(--sj-tap);padding:0 16px;border-radius:var(--sj-radius-sm);border:1px solid transparent;background:var(--sj-surface-2);color:var(--sj-text);font:inherit;font-size:15px;cursor:pointer}
+  .btn-primary{background:var(--sj-primary);color:#fff}
+  .btn-ghost{background:var(--sj-surface);border-color:var(--sj-border)}
+  .btn-danger{background:var(--sj-surface);border-color:var(--sj-danger);color:var(--sj-danger)}
+  .btn-sm{min-height:var(--sj-tap);padding:0 12px;font-size:14px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  /* ---------- พื้นที่/การ์ด ---------- */
+  .stack{display:grid;gap:12px}
+  .section-head{display:flex;align-items:center;gap:12px;margin:4px 0 8px}
+  .section-head h2{font-size:17px;flex:1}
+  .muted{color:var(--sj-text-muted)}
+  .sm{font-size:13px}
+  .panel{background:var(--sj-surface);border:1px solid var(--sj-border);border-radius:var(--sj-radius);padding:16px}
+
+  /* ---------- แถบสรุป ---------- */
+  .summary{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--sj-surface);border:1px solid var(--sj-border);border-radius:var(--sj-radius);padding:14px 16px;font:inherit;font-size:15px;cursor:pointer;min-height:var(--sj-tap)}
+  .summary strong{font-weight:700}
+  .summary .chev{margin-left:auto;color:var(--sj-text-muted)}
+
+  /* ---------- ช่องกรอก / ตัวกรอง ---------- */
+  .field{display:grid;gap:6px;margin-bottom:14px}
+  .field > label{font-size:14px;font-weight:600}
+  .field .req{color:var(--sj-danger)}
+  input[type=text],input[type=number],input[type=date],select,textarea{width:100%;min-height:var(--sj-tap);padding:8px 12px;border:1px solid var(--sj-border);border-radius:var(--sj-radius-sm);background:var(--sj-surface);font:inherit;font-size:15px;color:var(--sj-text)}
+  textarea{min-height:76px;resize:vertical}
+  .err{color:var(--sj-danger);font-size:13px}
+  .invalid{border-color:var(--sj-danger)}
+  .filters{display:grid;gap:8px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;min-height:var(--sj-tap);padding:0 12px;border-radius:999px;border:1px solid var(--sj-border);background:var(--sj-surface);color:var(--sj-text);font:inherit;font-size:14px;cursor:pointer}
+  .chip[aria-pressed="true"]{background:var(--sj-primary-weak);border-color:var(--sj-primary);color:var(--sj-primary);font-weight:600}
+
+  /* ---------- การ์ดของ ---------- */
+  .cards{display:grid;gap:12px;margin-top:12px}
+  @media (min-width:768px){ .cards{grid-template-columns:1fr 1fr} }
+  .card{background:var(--sj-surface);border:1px solid var(--sj-border);border-radius:var(--sj-radius);padding:14px 16px}
+  .card-top{display:flex;align-items:flex-start;gap:10px}
+  .card-name{font-size:16px;font-weight:600;flex:1}
+  .card-meta{font-size:13px;color:var(--sj-text-muted);margin-top:4px}
+  .card-actions{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+  .badge-warn{background:var(--sj-warn-weak);border-color:var(--sj-warn-border);color:var(--sj-warn)}
+  .badge-danger{background:var(--sj-danger-weak);border-color:var(--sj-danger);color:var(--sj-danger)}
+  .badge-fresh{background:transparent;color:var(--sj-text-muted);font-weight:500}
+  .stepper{display:flex;align-items:center;gap:6px}
+  .stepper button{width:var(--sj-tap);height:var(--sj-tap);border-radius:var(--sj-radius-sm);border:1px solid var(--sj-border);background:var(--sj-surface);font-size:20px;line-height:1;cursor:pointer;color:var(--sj-text)}
+  .stepper .val{min-width:44px;text-align:center;font-weight:700}
+  .qty-left{margin-left:auto;font-size:13px;color:var(--sj-text-muted)}
+
+  /* ---------- แถวรายการอ้างอิง (จุดเก็บ/หมวดหมู่) ---------- */
+  .rows{display:grid;gap:8px;margin-top:12px}
+  .row{display:flex;align-items:center;gap:12px;background:var(--sj-surface);border:1px solid var(--sj-border);border-radius:var(--sj-radius);padding:12px 14px;flex-wrap:wrap}
+  .row .name{font-weight:600;flex:1;min-width:140px}
+  .row .count{font-size:13px;color:var(--sj-text-muted);white-space:nowrap}
+  .row .row-actions{display:flex;gap:8px}
+  .row-block{width:100%;font-size:13px;color:var(--sj-danger)}
+  .row-edit{display:flex;gap:8px;flex:1;align-items:center;flex-wrap:wrap}
+  .row-edit input{flex:1;min-width:160px}
+
+  /* ---------- ใช้หมดแล้ว / ต้องซื้อ ---------- */
+  .inline-form{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+  .inline-form .grow{flex:1;min-width:200px}
+  .check-row{display:flex;align-items:center;gap:12px;background:var(--sj-surface);border:1px solid var(--sj-border);border-radius:var(--sj-radius);padding:12px 14px}
+  .check-row label{display:flex;align-items:center;gap:10px;flex:1;font-size:15px;cursor:pointer}
+  .check-row input[type=checkbox]{width:22px;height:22px}
+  .done{text-decoration:line-through;color:var(--sj-text-muted)}
+
+  /* ---------- สถานะว่าง ---------- */
+  .empty{background:var(--sj-surface);border:1px dashed var(--sj-border);border-radius:var(--sj-radius);padding:28px 16px;text-align:center;display:grid;gap:12px;justify-items:center}
+  .empty p{font-size:15px}
+  .empty .btn{justify-self:center}
+
+  /* ---------- toast ---------- */
+  .toast-wrap{position:fixed;left:0;right:0;bottom:16px;display:flex;justify-content:center;padding:0 16px;pointer-events:none;z-index:20}
+  .toast{pointer-events:auto;display:flex;align-items:center;gap:12px;background:#1f2933;color:#fff;border-radius:var(--sj-radius);padding:12px 16px;box-shadow:0 6px 20px rgba(16,24,40,.25);max-width:520px;font-size:14px}
+  .toast button{background:transparent;border:1px solid #ffffff66;color:#fff;border-radius:var(--sj-radius-sm);min-height:var(--sj-tap);padding:0 12px;font:inherit;font-size:14px;cursor:pointer}
+  .toast .count{opacity:.7;font-size:13px}
+
+  /* ---------- dialog ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}
+  .dialog{background:var(--sj-surface);border-radius:var(--sj-radius);padding:20px;max-width:420px;width:100%;display:grid;gap:14px}
+  .dialog h3{font-size:17px}
+  .dialog .dialog-actions{display:flex;gap:8px;justify-content:flex-end}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="draft">
+  <b>แบบร่าง UX/UI (Draft)</b> — ยังไม่ใช่แอปจริง · ข้อมูลสมมติในหน่วยความจำ · รีเฟรช = ค่าเริ่มต้น · <b>สอดคล้องสคีมา v2 (สินค้า + ล็อต)</b>
+  <span class="hint">ตรวจ: ① การ์ด (1 ใบ = 1 สินค้า) + ป้ายเหลือง/แดง ② กด − จนถึง 0 แล้วดู toast “ย้อนกลับ” ③ ค้นหา/กรองพร้อมกัน ④ ฟอร์มเพิ่มของ (สร้างสินค้า+ล็อต) ⑤ ลบจุดเก็บที่มีของ ⑥ รีเซ็ตข้อมูลตัวอย่าง ⑦ ย่อ/ขยายหน้าต่าง 375 / 768 / 1280</span>
+</div>
+
+<div class="topbar">
+  <header class="app-header">
+    <div class="wrap">
+      <h1>สบายใจ Pantry</h1>
+      <a class="btn btn-primary" href="#/add">＋ เพิ่มของ</a>
+    </div>
+  </header>
+
+  <nav class="nav" id="nav" aria-label="เมนูหลัก"></nav>
+</div>
+
+<main>
+  <div class="wrap" id="app"></div>
+</main>
+
+<footer class="foot">เดโมแบบร่าง · ข้อมูลอยู่ในเครื่องนี้เท่านั้น (ไม่มี Backend · ไม่มีการซิงก์ · ไม่มีบัญชี)</footer>
+
+<div class="toast-wrap" id="toast-root"></div>
+<div id="dialog-root"></div>
+
+<script>
+/* =========================================================================
+   1) ข้อมูลสมมติ — สคีมา v2: products + lots + movements
+   ตรงกับ seed จริงของแอป (src/data/seed.js · 8 สินค้าในสต็อก + 2 ล็อตยอด 0)
+   ========================================================================= */
+const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const EXPIRING_THRESHOLD_DAYS = 3; // US-005
+
+function today0(){ const d = new Date(); d.setHours(0,0,0,0); return d; }
+function isoOff(off){
+  const d = today0(); d.setDate(d.getDate() + off);
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return d.getFullYear() + '-' + m + '-' + dd;
+}
+function parseDay(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function thaiDate(iso){
+  const d = parseDay(iso);
+  return d.getDate() + ' ' + MONTHS_TH[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+}
+/* ---- สคีมา v2: วันหมดอายุ/สถานะ เป็นคุณสมบัติของ "ล็อต" ไม่ใช่ของสินค้า ---- */
+function daysLeft(lot){
+  if(!lot.expiryDate) return null;
+  return Math.round((parseDay(lot.expiryDate) - today0()) / 86400000);
+}
+/* สถานะคำนวณสดจาก expiryDate (ดีไซน์ข้อ 2.4) */
+function statusOf(lot){
+  const n = daysLeft(lot);
+  if(n === null) return 'none';
+  if(n < 0) return 'expired';
+  if(n <= EXPIRING_THRESHOLD_DAYS) return 'expiring';
+  return 'fresh';
+}
+/* สี + ข้อความ คู่กันเสมอ (ข้อ 4.2) */
+function statusText(lot){
+  const n = daysLeft(lot);
+  if(n === null) return '';
+  if(n < 0) return 'หมดอายุแล้ว · เลย ' + Math.abs(n) + ' วัน';
+  if(n === 0) return 'ใกล้หมดอายุ · ครบกำหนดวันนี้';
+  if(n <= EXPIRING_THRESHOLD_DAYS) return 'ใกล้หมดอายุ · เหลือ ' + n + ' วัน';
+  return 'อีก ' + n + ' วัน';
+}
+const badgeClassOf = { expired:'badge badge-danger', expiring:'badge badge-warn', fresh:'badge badge-fresh' };
+const statusRank = { expired:0, expiring:1, fresh:2, none:3 };
+
+/* ---- ล็อต: ยอดรวม + FEFO (เทียบเท่า selectors.js ของแอปจริง) ---- */
+const activeLots = (list) => (list || []).filter(l => l.quantity > 0);
+const emptyLots = (list) => (list || []).filter(l => !(l.quantity > 0));
+const totalQty = (list) => activeLots(list).reduce((sum,l) => sum + l.quantity, 0);
+const lotsOfProduct = (pid) => state.lots.filter(l => l.productId === pid);
+const productOf = (pid) => state.products.find(p => p.id === pid) || null;
+/* เรียงหมดอายุใกล้สุดก่อน · ของที่ไม่ระบุวันไปท้าย (ตัดด้วย id เพื่อให้ผลคงที่) */
+function sortFEFO(list){
+  return (list || []).slice().sort((a,b) => {
+    if(a.expiryDate && b.expiryDate && a.expiryDate !== b.expiryDate) return a.expiryDate < b.expiryDate ? -1 : 1;
+    if(a.expiryDate && !b.expiryDate) return -1;
+    if(!a.expiryDate && b.expiryDate) return 1;
+    return String(a.id).localeCompare(String(b.id));
+  });
+}
+const nearestExpiryLot = (list) => sortFEFO(activeLots(list)).filter(l => l.expiryDate)[0] || null;
+/* เลือกล็อตที่จะหักแบบ FEFO — "ทยอยใช้" หักข้ามล็อตได้ */
+function pickLotsForConsumption(list, qty){
+  const picks = [];
+  let left = qty;
+  for(const lot of sortFEFO(activeLots(list))){
+    if(left <= 0) break;
+    const take = Math.min(lot.quantity, left);
+    if(take <= 0) continue;
+    picks.push({lot, take});
+    left -= take;
+  }
+  return picks;
+}
+function pushMovement(lotId, type, delta){
+  state.movements.push({id:'mv-' + Date.now() + '-' + state.movements.length, lotId, type, delta, at:isoOff(0)});
+}
+function lastMovementOf(lotId){
+  let last = null;
+  for(const mv of state.movements) if(mv.lotId === lotId) last = mv;
+  return last;
+}
+/* หักของออกจากสินค้าทั้งตัวแบบ FEFO (ทยอยใช้) */
+function consumeProduct(productId, qty){
+  for(const {lot, take} of pickLotsForConsumption(lotsOfProduct(productId), qty)){
+    lot.quantity -= take;
+    pushMovement(lot.id, 'out', -take);
+  }
+}
+
+function seedData(){
+  return {
+    locations:[
+      {id:'loc-fridge', name:'ตู้เย็น'},
+      {id:'loc-freezer', name:'ช่องแช่แข็ง'},
+      {id:'loc-pantry', name:'ตู้กับข้าว'},
+      {id:'loc-shelf', name:'ชั้นวางของ'},
+      {id:'loc-basket', name:'ตะกร้าผัก-ผลไม้'}
+    ],
+    categories:[
+      {id:'cat-ready', name:'พร้อมกิน'},
+      {id:'cat-ingredient', name:'วัตถุดิบ'},
+      {id:'cat-seasoning', name:'เครื่องปรุง'},
+      {id:'cat-household', name:'ของใช้ในครัว'}
+    ],
+    units:['ชิ้น','กล่อง','ขวด','ถุง','แพ็ก','ฟอง','หัว','กรัม','กิโลกรัม','ลิตร','มล.'],
+    /* ---- สคีมา v2: สินค้า (Product) + ล็อต (Lot) + การเคลื่อนไหว (Movement) ----
+       ตั้งใจให้ตรงกับ seed จริงของแอป (src/data/seed.js) เพื่อไม่ให้แบบร่างเพี้ยนจากของจริง
+       Product = ชื่อ + หน่วย + หมวดหมู่ + หมายเหตุ (ไม่มียอด) · Lot = ยอดที่ทยอยหักได้ทีละส่วน */
+    products:[
+      {id:'prod-milk',      name:'นมสด 1 ลิตร',  unit:'กล่อง', categoryId:'cat-ready',      note:''},
+      {id:'prod-yogurt',    name:'โยเกิร์ต',      unit:'ถ้วย',  categoryId:'cat-ready',      note:''},
+      {id:'prod-cabbage',   name:'ผักกาดขาว',     unit:'หัว',   categoryId:'cat-ingredient', note:''},
+      {id:'prod-egg',       name:'ไข่ไก่',        unit:'ฟอง',   categoryId:'cat-ingredient', note:''},
+      {id:'prod-chicken',   name:'อกไก่แช่แข็ง',  unit:'แพ็ก',  categoryId:'cat-ingredient', note:''},
+      {id:'prod-rice',      name:'ข้าวสาร',       unit:'ถุง',   categoryId:'cat-ingredient', note:'ของยาย'},
+      {id:'prod-fishsauce', name:'น้ำปลา',        unit:'ขวด',   categoryId:'cat-seasoning',  note:''},
+      {id:'prod-tissue',    name:'กระดาษทิชชู่',  unit:'แพ็ก',  categoryId:'cat-household',  note:''},
+      {id:'prod-butter',    name:'เนยจืด',        unit:'ก้อน',  categoryId:'cat-ingredient', note:''},
+      {id:'prod-lime',      name:'มะนาว',         unit:'ลูก',   categoryId:'cat-ingredient', note:''}
+    ],
+    // ล็อตแยกตาม (สินค้า + จุดเก็บ + วันหมดอายุ) · ยอด 0 = ใช้หมดแล้ว (ไม่มีตาราง usedUp แยก)
+    lots:[
+      {id:'lot-milk-1',      productId:'prod-milk',      locationId:'loc-fridge',  quantity:1, expiryDate:isoOff(2)},
+      {id:'lot-yogurt-1',    productId:'prod-yogurt',    locationId:'loc-fridge',  quantity:4, expiryDate:isoOff(3)},
+      {id:'lot-cabbage-1',   productId:'prod-cabbage',   locationId:'loc-basket',  quantity:1, expiryDate:isoOff(-1)},
+      {id:'lot-egg-1',       productId:'prod-egg',       locationId:'loc-fridge',  quantity:6, expiryDate:null},
+      {id:'lot-chicken-1',   productId:'prod-chicken',   locationId:'loc-freezer', quantity:1, expiryDate:isoOff(30)},
+      {id:'lot-rice-1',      productId:'prod-rice',      locationId:'loc-pantry',  quantity:2, expiryDate:null},
+      {id:'lot-fishsauce-1', productId:'prod-fishsauce', locationId:'loc-shelf',   quantity:1, expiryDate:null},
+      {id:'lot-tissue-1',    productId:'prod-tissue',    locationId:'loc-shelf',   quantity:1, expiryDate:null},
+      {id:'lot-butter-1',    productId:'prod-butter',    locationId:'loc-fridge',  quantity:0, expiryDate:null},
+      {id:'lot-lime-1',      productId:'prod-lime',      locationId:'loc-basket',  quantity:0, expiryDate:null}
+    ],
+    // ประวัติการเคลื่อนไหว (เขียนได้อย่างเดียว) — มุม "ใช้หมดแล้ว" คำนวณ "จำนวนเดิม + วันที่" จากรายการสุดท้าย
+    movements:[
+      {id:'mv-milk-in',      lotId:'lot-milk-1',      type:'in',     delta: 1, at:isoOff(-1)},
+      {id:'mv-yogurt-in',    lotId:'lot-yogurt-1',    type:'in',     delta: 4, at:isoOff(-1)},
+      {id:'mv-cabbage-in',   lotId:'lot-cabbage-1',   type:'in',     delta: 1, at:isoOff(-1)},
+      {id:'mv-egg-in',       lotId:'lot-egg-1',       type:'in',     delta: 6, at:isoOff(-1)},
+      {id:'mv-chicken-in',   lotId:'lot-chicken-1',   type:'in',     delta: 1, at:isoOff(-1)},
+      {id:'mv-rice-in',      lotId:'lot-rice-1',      type:'in',     delta: 2, at:isoOff(-1)},
+      {id:'mv-fishsauce-in', lotId:'lot-fishsauce-1', type:'in',     delta: 1, at:isoOff(-1)},
+      {id:'mv-tissue-in',    lotId:'lot-tissue-1',    type:'in',     delta: 1, at:isoOff(-1)},
+      {id:'mv-butter-in',    lotId:'lot-butter-1',    type:'in',     delta: 1, at:isoOff(-6)},
+      {id:'mv-butter-out',   lotId:'lot-butter-1',    type:'out',    delta:-1, at:isoOff(-2)},
+      {id:'mv-lime-in',      lotId:'lot-lime-1',      type:'in',     delta: 3, at:isoOff(-8)},
+      {id:'mv-lime-out',     lotId:'lot-lime-1',      type:'out',    delta:-3, at:isoOff(-5)}
+    ],
+    shopping:[
+      {id:'s-1', text:'น้ำตาลทราย'},
+      {id:'s-2', text:'ผงซักฟอก'}
+    ]
+  };
+}
+
+const ROUTES = [
+  {path:'/items',      label:'รายการ',      title:'รายการของทั้งหมด'},
+  {path:'/add',        label:'เพิ่ม',        title:'เพิ่มของ'},
+  {path:'/locations',  label:'จุดเก็บ',      title:'จุดเก็บ'},
+  {path:'/categories', label:'หมวดหมู่',      title:'หมวดหมู่'},
+  {path:'/expiring',   label:'ใกล้หมดอายุ',   title:'ต้องใช้ก่อน'},
+  {path:'/used-up',    label:'ใช้หมดแล้ว',   title:'ใช้หมดแล้ว'},
+  {path:'/shopping',   label:'ต้องซื้อ',      title:'รายการที่ต้องซื้อ'},
+  {path:'/settings',   label:'ตั้งค่า',       title:'ตั้งค่า'}
+];
+
+/* =========================================================================
+   2) สถานะของ prototype
+   ========================================================================= */
+const initial = seedData();
+let state = Object.assign({}, JSON.parse(JSON.stringify(initial)), {
+  q:'', filterLoc:null, filterCat:null,
+  editingRef:null, refError:null, lastUsedUp:null
+});
+let toastTimer = null, toastCount = null, toastLeft = 0;
+
+const app = document.getElementById('app');
+const nav = document.getElementById('nav');
+const toastRoot = document.getElementById('toast-root');
+const dialogRoot = document.getElementById('dialog-root');
+
+/* ---------- เครื่องมือย่อ ---------- */
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const locName = (id) => { const l = state.locations.find(x => x.id === id); return l ? l.name : '—'; };
+const catName = (id) => { const c = state.categories.find(x => x.id === id); return c ? c.name : null; };
+/* สคีมา v2: จุดเก็บนับ "ล็อตที่ยังมีของ" · หมวดหมู่นับ "สินค้า" ที่อ้างหมวดนั้น */
+const countLotsIn = (locId) => state.lots.filter(l => l.locationId === locId && l.quantity > 0).length;
+const countProductsIn = (catId) => state.products.filter(p => p.categoryId === catId).length;
+const countIn = (type, id) => (type === 'location' ? countLotsIn(id) : countProductsIn(id));
+const countUnit = (type) => (type === 'location' ? 'ล็อต' : 'สินค้า');
+
+/* หนึ่งแถว = หนึ่งสินค้า (รวมล็อตของสินค้านั้น) — เทียบเท่า groupByProduct() ของแอป */
+function stockRows(){
+  return state.products.map(p => {
+    const lots = lotsOfProduct(p.id);
+    const active = activeLots(lots);
+    return {product:p, lots, activeLots:active, total: totalQty(active)};
+  }).filter(row => row.total > 0);
+}
+/* ป้ายบนการ์ด = ล็อตที่หมดอายุใกล้สุดของสินค้านั้น (ตรงกับ views/items.js) */
+const badgeLotOf = (row) => nearestExpiryLot(row.activeLots);
+const rowStatus = (row) => { const lot = badgeLotOf(row); return lot ? statusOf(lot) : 'none'; };
+function sortedRows(list){
+  return list.slice().sort((a,b) => {
+    const r = statusRank[rowStatus(a)] - statusRank[rowStatus(b)];
+    return r !== 0 ? r : a.product.name.localeCompare(b.product.name, 'th');
+  });
+}
+/* ค้นชื่อ + หมายเหตุ (ระดับสินค้า) และกรองจุดเก็บ (ล็อต) + หมวดหมู่ (สินค้า) พร้อมกัน (US-002) */
+function filteredRows(){
+  const q = state.q.trim().toLowerCase();
+  return sortedRows(stockRows().filter(row => {
+    const p = row.product;
+    if(state.filterLoc && !row.activeLots.some(l => l.locationId === state.filterLoc)) return false;
+    if(state.filterCat && p.categoryId !== state.filterCat) return false;
+    if(!q) return true;
+    return p.name.toLowerCase().includes(q) || (p.note || '').toLowerCase().includes(q);
+  }));
+}
+/* แถบสรุปนับเป็น "ล็อต" (เทียบเท่า expiringSummary) */
+function expiryCounts(){
+  let expired = 0, expiring = 0;
+  activeLots(state.lots).forEach(l => {
+    const s = statusOf(l);
+    if(s === 'expired') expired++;
+    if(s === 'expiring') expiring++;
+  });
+  return { expired, expiring, total: expired + expiring };
+}
+
+/* ---------- toast (undo 5 วินาที · US-003) ---------- */
+function showToast(text, withUndo){
+  clearInterval(toastTimer);
+  toastLeft = 5;
+  toastRoot.innerHTML =
+    '<div class="toast" role="status" aria-live="polite">' +
+      '<span>' + esc(text) + '</span>' +
+      (withUndo ? '<button data-act="undo-usedup">ย้อนกลับ <span class="count" id="toast-count">·5</span></button>' : '') +
+    '</div>';
+  if(withUndo){
+    toastTimer = setInterval(() => {
+      toastLeft--;
+      const c = document.getElementById('toast-count');
+      if(c) c.textContent = '·' + toastLeft;
+      if(toastLeft <= 0){ clearInterval(toastTimer); hideToast(); }
+    }, 1000);
+  } else {
+    toastTimer = setInterval(() => { clearInterval(toastTimer); hideToast(); }, 2600);
+  }
+}
+function hideToast(){ clearInterval(toastTimer); toastRoot.innerHTML = ''; }
+
+/* ---------- dialog ยืนยัน ---------- */
+function confirmDialog(title, body, confirmLabel, onConfirm){
+  dialogRoot.innerHTML =
+    '<div class="overlay" data-act="overlay">' +
+      '<div class="dialog" role="dialog" aria-modal="true" aria-label="' + esc(title) + '">' +
+        '<h3>' + esc(title) + '</h3>' +
+        '<p class="sm muted">' + esc(body) + '</p>' +
+        '<div class="dialog-actions">' +
+          '<button class="btn btn-ghost" data-act="dialog-cancel">ยกเลิก</button>' +
+          '<button class="btn btn-danger" data-act="dialog-confirm">' + esc(confirmLabel) + '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  dialogRoot.querySelector('[data-act="dialog-confirm"]').onclick = () => { closeDialog(); onConfirm(); };
+  dialogRoot.querySelector('[data-act="dialog-cancel"]').onclick = closeDialog;
+}
+function closeDialog(){ dialogRoot.innerHTML = ''; }
+
+/* =========================================================================
+   3) จอต่างๆ
+   ========================================================================= */
+function viewItems(){
+  const counts = expiryCounts();
+  const list = filteredRows();
+  const summaryTxt = counts.total === 0
+    ? 'ยังไม่มีของที่ต้องใช้ก่อน'
+    : 'มีของต้องใช้ <strong>' + counts.total + '</strong> ล็อต · หมดอายุ ' + counts.expired + ' · ใกล้หมดอายุ ' + counts.expiring;
+
+  const locChips = state.locations.map(l =>
+    '<button class="chip" data-act="filter-loc" data-id="' + l.id + '" aria-pressed="' + (state.filterLoc === l.id) + '">' +
+      (state.filterLoc === l.id ? '✓ ' : '') + esc(l.name) + '</button>').join('');
+
+  const catChips = state.categories.map(c =>
+    '<button class="chip" data-act="filter-cat" data-id="' + c.id + '" aria-pressed="' + (state.filterCat === c.id) + '">' +
+      (state.filterCat === c.id ? '✓ ' : '') + esc(c.name) + '</button>').join('');
+
+  return '' +
+    '<button class="summary" data-act="go-expiring">' +
+      '<span>' + summaryTxt + '</span><span class="chev">›</span>' +
+    '</button>' +
+
+    '<div class="filters" style="margin-top:16px">' +
+      '<div class="field" style="margin:0">' +
+        '<label for="q">ค้นหา</label>' +
+        '<input id="q" type="text" placeholder="ค้นชื่อของหรือข้อความในหมายเหตุ…" value="' + esc(state.q) + '" autocomplete="off">' +
+      '</div>' +
+      '<div><p class="sm muted" style="margin-bottom:6px">จุดเก็บ</p><div class="chips">' +
+        '<button class="chip" data-act="filter-loc" data-id="" aria-pressed="' + (state.filterLoc === null) + '">ทั้งหมด</button>' + locChips +
+      '</div></div>' +
+      '<div><p class="sm muted" style="margin-bottom:6px">หมวดหมู่</p><div class="chips">' +
+        '<button class="chip" data-act="filter-cat" data-id="" aria-pressed="' + (state.filterCat === null) + '">ทั้งหมด</button>' + catChips +
+      '</div></div>' +
+    '</div>' +
+
+    '<div class="section-head" id="list-head" style="margin-top:16px">' + listHeadHtml(list.length) + '</div>' +
+    '<div class="cards" id="list">' + cardsHtml(list) + '</div>';
+}
+
+function listHeadHtml(count){
+  const filtering = state.q || state.filterLoc || state.filterCat;
+  return '<h2>ของในบ้าน (' + count + ' สินค้า)</h2>' +
+    (filtering ? '<button class="btn btn-ghost btn-sm" data-act="clear-filters">ล้างตัวกรอง</button>' : '');
+}
+
+/* การ์ด: หนึ่งใบ = หนึ่งสินค้า · ยอดที่แสดง = ผลรวมทุกล็อตที่ยังมีของ
+   ป้ายวันหมดอายุ = ล็อตที่ใกล้ที่สุด · ยอดเป็น "1 กล่อง" อยู่ได้ถึงแม้มีหลายล็อต */
+function cardsHtml(list){
+  if(!list.length) return emptyState();
+  return list.map(row => {
+    const p = row.product;
+    const badgeLot = badgeLotOf(row);
+    const s = badgeLot ? statusOf(badgeLot) : 'none';
+    const locs = Array.from(new Set(row.activeLots.map(l => l.locationId))).map(locName).join(', ');
+    const batchNote = row.activeLots.length > 1 ? row.activeLots.length + ' ล็อต' : null;
+    const meta = [row.total + ' ' + p.unit, locs, catName(p.categoryId), batchNote].filter(Boolean).join(' · ') +
+      (p.note ? ' · 📝 ' + p.note : '');
+    return '' +
+      '<article class="card">' +
+        '<div class="card-top">' +
+          '<h3 class="card-name">' + esc(p.name) + '</h3>' +
+          (s !== 'none' ? '<span class="' + badgeClassOf[s] + '">' + esc(statusText(badgeLot)) + '</span>' : '') +
+        '</div>' +
+        '<p class="card-meta">' + esc(meta) + '</p>' +
+        '<div class="card-actions">' +
+          '<div class="stepper">' +
+            '<button data-act="dec" data-id="' + p.id + '" aria-label="ลดจำนวน ' + esc(p.name) + '">−</button>' +
+            '<span class="val">' + row.total + '</span>' +
+            '<button data-act="inc" data-id="' + p.id + '" aria-label="เพิ่มจำนวน ' + esc(p.name) + '">+</button>' +
+          '</div>' +
+          '<button class="btn btn-ghost btn-sm" data-act="usedup" data-id="' + p.id + '">ใช้หมดแล้ว</button>' +
+        '</div>' +
+      '</article>';
+  }).join('');
+}
+
+function emptyState(){
+  const filtering = state.q || state.filterLoc || state.filterCat;
+  return filtering
+    ? '<div class="empty"><p>ไม่พบของที่ตรงกับที่กรองไว้</p><button class="btn btn-ghost" data-act="clear-filters">ล้างตัวกรอง</button></div>'
+    : '<div class="empty"><p>ยังไม่มีของในตู้ — เริ่มจากเพิ่มชิ้นแรก</p><a class="btn btn-primary" href="#/add">＋ เพิ่มของ</a></div>';
+}
+
+function viewAdd(){
+  const locOpts = state.locations.map(l => '<option value="' + l.id + '">' + esc(l.name) + '</option>').join('');
+  const catOpts = '<option value="">— ไม่ระบุ —</option>' +
+    state.categories.map(c => '<option value="' + c.id + '">' + esc(c.name) + '</option>').join('');
+  const unitOpts = state.units.map(u => '<option value="' + esc(u) + '">' + esc(u) + '</option>').join('');
+  // autocomplete ชื่อของเดิม — ดึงจาก listProducts() (สินค้าไม่ซ้ำ) ไม่ใช่จากรายการล็อต
+  const names = Array.from(new Set(state.products.map(p => p.name))).map(n => '<option value="' + esc(n) + '"></option>').join('');
+
+  return '' +
+    '<div class="section-head"><h2>เพิ่มของ</h2><span class="sm muted">ไม่เกิน 3 ขั้นตอน: ชื่อ → จุดเก็บ → บันทึก</span></div>' +
+    '<form class="panel" id="add-form" novalidate>' +
+      '<div class="field">' +
+        '<label for="f-name">ชื่อของ <span class="req">*</span></label>' +
+        '<input id="f-name" type="text" list="name-suggest" placeholder="เช่น นมสด 1 ลิตร" autocomplete="off">' +
+        '<datalist id="name-suggest">' + names + '</datalist>' +
+        '<p class="err hidden" id="e-name"></p>' +
+      '</div>' +
+      '<div style="display:flex;gap:12px;flex-wrap:wrap">' +
+        '<div class="field" style="flex:1;min-width:130px">' +
+          '<label for="f-qty">จำนวน <span class="req">*</span></label>' +
+          '<input id="f-qty" type="number" min="1" step="1" value="1">' +
+          '<p class="err hidden" id="e-qty"></p>' +
+        '</div>' +
+        '<div class="field" style="flex:2;min-width:190px">' +
+          '<label for="f-unit">หน่วย <span class="req">*</span></label>' +
+          '<select id="f-unit">' + unitOpts + '<option value="__new__">＋ พิมพ์หน่วยใหม่…</option></select>' +
+          '<input id="f-unit-new" class="hidden" type="text" placeholder="พิมพ์หน่วยใหม่ เช่น ถ้วย">' +
+          '<p class="err hidden" id="e-unit"></p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label for="f-loc">จุดเก็บ <span class="req">*</span></label>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<select id="f-loc" style="flex:1;min-width:180px">' + locOpts + '</select>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-act="toggle-inline" data-target="loc-new">＋ จุดเก็บใหม่</button>' +
+        '</div>' +
+        '<div id="loc-new" class="inline-form hidden" style="margin-top:6px">' +
+          '<input class="grow" id="f-loc-new" type="text" placeholder="ชื่อจุดเก็บใหม่">' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-act="add-loc-inline">เพิ่ม</button>' +
+        '</div>' +
+        '<p class="err hidden" id="e-loc"></p>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label for="f-cat">หมวดหมู่ (ไม่บังคับ)</label>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<select id="f-cat" style="flex:1;min-width:180px">' + catOpts + '</select>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-act="toggle-inline" data-target="cat-new">＋ หมวดใหม่</button>' +
+        '</div>' +
+        '<div id="cat-new" class="inline-form hidden" style="margin-top:6px">' +
+          '<input class="grow" id="f-cat-new" type="text" placeholder="ชื่อหมวดใหม่">' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-act="add-cat-inline">เพิ่ม</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label for="f-exp">วันหมดอายุ (ไม่บังคับ)</label>' +
+        '<input id="f-exp" type="date">' +
+        '<p class="sm muted">ไม่กรอก = ไม่ถูกนับว่าใกล้หมดอายุ</p>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label for="f-note">หมายเหตุ (ไม่บังคับ)</label>' +
+        '<input id="f-note" type="text" placeholder="เช่น ของยาย · ค้นหาคำนี้เจอ">' +
+      '</div>' +
+      '<p class="err hidden" id="e-summary"></p>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap">' +
+        '<a class="btn btn-ghost" href="#/items">ยกเลิก</a>' +
+        '<button class="btn btn-primary" type="submit">บันทึก</button>' +
+      '</div>' +
+    '</form>';
+}
+
+function referenceView(kind){
+  const isLoc = kind === 'location';
+  const list = isLoc ? state.locations : state.categories;
+  const title = isLoc ? 'จุดเก็บ' : 'หมวดหมู่';
+
+  const rows = list.map(r => {
+    const n = countIn(kind, r.id);
+    const editing = state.editingRef === r.id;
+    const err = state.refError && state.refError.id === r.id ? state.refError.text : '';
+
+    if(editing){
+      return '<div class="row">' +
+        '<div class="row-edit">' +
+          '<input id="ref-name-' + r.id + '" type="text" value="' + esc(r.name) + '">' +
+          '<button class="btn btn-primary btn-sm" data-act="ref-save" data-kind="' + kind + '" data-id="' + r.id + '">บันทึก</button>' +
+          '<button class="btn btn-ghost btn-sm" data-act="ref-cancel">ยกเลิก</button>' +
+        '</div>' +
+        '<span class="count">' + n + ' ' + countUnit(kind) + '</span>' +
+      '</div>';
+    }
+
+    return '<div class="row">' +
+      '<button class="name" data-act="ref-open" data-id="' + r.id + '" style="background:none;border:0;font:inherit;font-weight:600;text-align:left;cursor:pointer;padding:0;min-height:var(--sj-tap);display:inline-flex;align-items:center">' + esc(r.name) + '</button>' +
+      '<span class="count">' + n + ' ' + countUnit(kind) + '</span>' +
+      '<span class="row-actions">' +
+        '<button class="btn btn-ghost btn-sm" data-act="ref-edit" data-id="' + r.id + '">แก้ชื่อ</button>' +
+        '<button class="btn btn-danger btn-sm" data-act="ref-del" data-kind="' + kind + '" data-id="' + r.id + '">ลบ</button>' +
+      '</span>' +
+      (err ? '<p class="row-block">' + esc(err) + '</p>' : '') +
+    '</div>';
+  }).join('');
+
+  return '' +
+    '<div class="section-head">' +
+      '<h2>' + title + ' (' + list.length + ')</h2>' +
+      '<span class="sm muted">แตะชื่อเพื่อดูของใน' + title + 'นั้น</span>' +
+    '</div>' +
+    '<div class="panel">' +
+      '<div class="inline-form">' +
+        '<div class="field grow" style="margin:0">' +
+          '<label for="ref-new">เพิ่ม' + title + 'ใหม่</label>' +
+          '<input id="ref-new" type="text" placeholder="ชื่อ' + title + 'ใหม่">' +
+        '</div>' +
+        '<button class="btn btn-primary" data-act="ref-add" data-kind="' + kind + '">เพิ่ม</button>' +
+      '</div>' +
+      '<p class="sm muted" style="margin-top:10px">ลบไม่ได้ถ้ายังมีของอ้างอิงอยู่ — ระบบจะบอกว่ายังมีของค้างอยู่กี่ล็อต (จุดเก็บ) หรือกี่สินค้า (หมวดหมู่)</p>' +
+    '</div>' +
+    '<div class="rows">' + rows + '</div>';
+}
+
+function viewExpiring(){
+  // สคีมา v2: แถว = "ล็อต" (วันหมดอายุเป็นของคุณสมบัติของล็อต) · สินค้าเดียวกันอาจโผล่หลายแถว
+  const list = sortFEFO(activeLots(state.lots)).filter(l => { const s = statusOf(l); return s === 'expired' || s === 'expiring'; });
+  const expired = list.filter(l => statusOf(l) === 'expired');
+  const expiring = list.filter(l => statusOf(l) === 'expiring');
+
+  const group = (title, arr) => arr.length ? '<h3 class="sm muted" style="margin:14px 0 6px">' + title + ' (' + arr.length + ')</h3>' +
+    '<div class="rows">' + arr.map(l => {
+      const p = productOf(l.productId);
+      return '<div class="row">' +
+        '<span class="name">' + esc(p ? p.name : '—') + '</span>' +
+        '<span class="count">' + l.quantity + ' ' + esc(p ? p.unit : '') + ' · ' + esc(locName(l.locationId)) + '</span>' +
+        '<span class="' + badgeClassOf[statusOf(l)] + '">' + esc(statusText(l)) + '</span>' +
+      '</div>';
+    }).join('') + '</div>' : '';
+
+  return '' +
+    '<div class="section-head"><h2>ต้องใช้ก่อน</h2><span class="sm muted">แถวละล็อต · ล็อตที่ไม่ระบุวันหมดอายุไม่แสดงที่นี่</span></div>' +
+    (list.length ? group('หมดอายุแล้ว', expired) + group('ใกล้หมดอายุ', expiring)
+      : '<div class="empty"><p>ยังไม่มีของที่ต้องใช้ก่อน 🎉</p><a class="btn btn-ghost" href="#/items">กลับไปดูรายการ</a></div>');
+}
+
+/* สคีมา v2: "ใช้หมดแล้ว" = ล็อตที่ยอดเหลือ 0 (ไม่มีตาราง usedUp แยก)
+   จำนวนเดิม + วันที่ อ่านจาก movement ล่าสุดของล็อตนั้น */
+function usedUpRows(){
+  return emptyLots(state.lots).map(lot => {
+    const mv = lastMovementOf(lot.id);
+    const amount = mv && mv.delta < 0 ? Math.abs(mv.delta) : null;
+    return {lot, product: productOf(lot.productId), amount, usedUpDate: (mv && mv.at) || null};
+  }).sort((a,b) => String(b.usedUpDate).localeCompare(String(a.usedUpDate)));
+}
+
+function viewUsedUp(){
+  const list = usedUpRows();
+  const rows = list.map(({lot, product, amount, usedUpDate}) =>
+    '<div class="check-row">' +
+      '<label style="cursor:default"><span>' + esc(product ? product.name : '—') + '</span>' +
+        '<span class="count sm muted">' +
+          (amount != null ? amount + ' ' + esc(product ? product.unit : '') + ' · ' : '') +
+          'ใช้หมดเมื่อ ' + (usedUpDate ? thaiDate(usedUpDate) : '—') +
+        '</span>' +
+      '</label>' +
+      '<input type="number" min="1" value="' + (amount || 1) + '" style="width:84px" data-restore-qty="' + lot.id + '" aria-label="จำนวนที่จะนำกลับ">' +
+      '<button class="btn btn-primary btn-sm" data-act="restore" data-id="' + lot.id + '">นำกลับเข้ารายการ</button>' +
+    '</div>').join('');
+
+  return '' +
+    '<div class="section-head"><h2>ใช้หมดแล้ว (' + list.length + ')</h2><span class="sm muted">แถวละล็อตที่ยอดเหลือ 0 · ไม่ปนกับรายการที่ยังมีอยู่</span></div>' +
+    (list.length ? '<div class="rows">' + rows + '</div>'
+      : '<div class="empty"><p>ยังไม่มีของที่ใช้หมด</p><a class="btn btn-ghost" href="#/items">กลับไปดูรายการ</a></div>');
+}
+
+function viewShopping(){
+  const rows = state.shopping.map(s =>
+    '<div class="check-row">' +
+      '<label><input type="checkbox" data-act="shop-toggle" data-id="' + s.id + '"><span>' + esc(s.text) + '</span></label>' +
+      '<button class="btn btn-ghost btn-sm" data-act="shop-del" data-id="' + s.id + '">ลบ</button>' +
+    '</div>').join('');
+
+  return '' +
+    '<div class="section-head"><h2>รายการที่ต้องซื้อ (' + state.shopping.length + ')</h2><span class="sm muted">สมุดโน้ตอิสระ · ไม่ผูกกับรายการของ</span></div>' +
+    '<div class="panel">' +
+      '<div class="inline-form">' +
+        '<div class="field grow" style="margin:0"><label for="shop-new">เพิ่มรายการ</label>' +
+          '<input id="shop-new" type="text" placeholder="เช่น ผงซักฟอก"></div>' +
+        '<button class="btn btn-primary" data-act="shop-add">เพิ่ม</button>' +
+      '</div>' +
+      '<p class="sm muted" style="margin-top:10px">หนึ่งรายการ = ข้อความช่องเดียว (ไม่มีจำนวน/หมวดหมู่/จุดเก็บ) ตาม OQ-13</p>' +
+    '</div>' +
+    (state.shopping.length ? '<div class="rows">' + rows + '</div>'
+      : '<div class="empty"><p>ยังไม่มีรายการที่ต้องซื้อ</p><p class="sm muted">พิมพ์ด้านบนเพื่อจดรายการแรก</p></div>');
+}
+
+function viewSettings(){
+  const counts = expiryCounts();
+  return '' +
+    '<div class="section-head"><h2>ตั้งค่า</h2></div>' +
+    '<div class="panel stack">' +
+      '<h3 style="font-size:15px">ข้อมูลในเครื่องนี้</h3>' +
+      '<p class="sm muted">ข้อมูลทั้งหมดอยู่ในเบราว์เซอร์เครื่องนี้เท่านั้น ไม่มีการส่งออกไปที่ใด และไม่มีบัญชีผู้ใช้ · ปิดเน็ตแล้วเปิดดูได้</p>' +
+      '<p class="sm muted">ตอนนี้มีของ ' + state.products.length + ' สินค้า · ' + activeLots(state.lots).length + ' ล็อต · ต้องใช้ก่อน ' + counts.total + ' ล็อต · ใช้หมดแล้ว ' + emptyLots(state.lots).length + ' · ต้องซื้อ ' + state.shopping.length + '</p>' +
+    '</div>' +
+    '<div class="panel stack" style="margin-top:12px">' +
+      '<h3 style="font-size:15px">รีเซ็ตข้อมูลตัวอย่าง</h3>' +
+      '<p class="sm muted">คืนค่าข้อมูลตัวอย่างกลับมาเริ่มสาธิตใหม่ (ของที่บันทึกไว้ในเครื่องนี้จะถูกแทนที่)</p>' +
+      '<div><button class="btn btn-danger" data-act="reset">รีเซ็ตข้อมูลตัวอย่าง</button></div>' +
+    '</div>';
+}
+
+/* =========================================================================
+   4) router + การแสดงผล
+   ========================================================================= */
+function currentPath(){
+  const h = location.hash.replace(/^#/, '');
+  const found = ROUTES.some(r => r.path === h);
+  return found ? h : '/items';
+}
+
+function renderNav(){
+  const cur = currentPath();
+  nav.innerHTML = '<div class="wrap">' + ROUTES.map(r =>
+    '<a href="#' + r.path + '"' + (r.path === cur ? ' aria-current="page"' : '') + '>' + r.label + '</a>').join('') + '</div>';
+}
+
+function render(){
+  const path = currentPath();
+  const view = {
+    '/items': viewItems,
+    '/add': viewAdd,
+    '/locations': () => referenceView('location'),
+    '/categories': () => referenceView('category'),
+    '/expiring': viewExpiring,
+    '/used-up': viewUsedUp,
+    '/shopping': viewShopping,
+    '/settings': viewSettings
+  }[path];
+  app.innerHTML = view();
+  renderNav();
+  if(path === '/items'){
+    const q = document.getElementById('q');
+    if(q) q.addEventListener('input', (e) => {
+      state.q = e.target.value;
+      const list = filteredRows();
+      document.getElementById('list').innerHTML = cardsHtml(list);
+      document.getElementById('list-head').innerHTML = listHeadHtml(list.length);
+    });
+  }
+  if(path === '/add') bindAddForm();
+}
+
+/* ---------- การกระทำ (event delegation) ---------- */
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]');
+  if(!el) return;
+  const act = el.dataset.act;
+  const id = el.dataset.id;
+
+  switch(act){
+    case 'go-expiring': location.hash = '#/expiring'; return;
+
+    case 'dec': {
+      // สคีมา v2: − หักแบบ FEFO จากสินค้าทั้งตัว · เหลือตัวสุดท้าย → ล็อตยอด 0 (โผล่มุมใช้หมดแล้ว)
+      const row = stockRows().find(r => r.product.id === id);
+      if(!row) return;
+      if(row.total <= 1){ useUpAll(id); } else { consumeProduct(id, 1); render(); }
+      return;
+    }
+    case 'inc': {
+      // + = รับเข้าเพิ่ม 1 เข้าล็อตที่หมดอายุใกล้สุด (ถ้าไม่มีล็อตเลย ก็ใช้ล็อตแรกที่ยังมีของ)
+      const row = stockRows().find(r => r.product.id === id);
+      if(!row) return;
+      const lot = nearestExpiryLot(row.activeLots) || row.activeLots[0];
+      if(!lot) return;
+      lot.quantity++; pushMovement(lot.id, 'in', 1); render(); return;
+    }
+    case 'usedup': useUpAll(id); return;
+    case 'undo-usedup': undoUsedUp(); return;
+
+    case 'filter-loc':
+      state.filterLoc = el.dataset.id || null; render(); return;
+    case 'filter-cat':
+      state.filterCat = el.dataset.id || null; render(); return;
+    case 'clear-filters':
+      state.q = ''; state.filterLoc = null; state.filterCat = null; render(); return;
+
+    case 'toggle-inline': {
+      const box = document.getElementById(el.dataset.target);
+      if(box){ box.classList.toggle('hidden'); const input = box.querySelector('input'); if(input && !box.classList.contains('hidden')) input.focus(); }
+      return;
+    }
+    case 'add-loc-inline': {
+      const input = document.getElementById('f-loc-new');
+      const name = (input.value || '').trim();
+      if(!name) return;
+      const loc = {id:'loc-' + Date.now(), name};
+      state.locations.push(loc);
+      const sel = document.getElementById('f-loc');
+      sel.innerHTML += '<option value="' + loc.id + '" selected>' + esc(name) + '</option>';
+      sel.value = loc.id;
+      input.value = '';
+      document.getElementById('loc-new').classList.add('hidden');
+      showToast('เพิ่มจุดเก็บ "' + name + '" แล้ว');
+      return;
+    }
+    case 'add-cat-inline': {
+      const input = document.getElementById('f-cat-new');
+      const name = (input.value || '').trim();
+      if(!name) return;
+      const cat = {id:'cat-' + Date.now(), name};
+      state.categories.push(cat);
+      const sel = document.getElementById('f-cat');
+      sel.innerHTML += '<option value="' + cat.id + '" selected>' + esc(name) + '</option>';
+      sel.value = cat.id;
+      input.value = '';
+      document.getElementById('cat-new').classList.add('hidden');
+      showToast('เพิ่มหมวดหมู่ "' + name + '" แล้ว — เลือกใช้ให้แล้ว');
+      return;
+    }
+
+    case 'ref-add': {
+      const kind = el.dataset.kind;
+      const input = document.getElementById('ref-new');
+      const name = (input.value || '').trim();
+      if(!name){ input.focus(); return; }
+      const rec = {id:(kind === 'location' ? 'loc-' : 'cat-') + Date.now(), name};
+      (kind === 'location' ? state.locations : state.categories).push(rec);
+      state.refError = null;
+      render();
+      showToast('เพิ่ม' + (kind === 'location' ? 'จุดเก็บ' : 'หมวดหมู่') + ' "' + name + '" แล้ว');
+      return;
+    }
+    case 'ref-edit': state.editingRef = id; state.refError = null; render(); return;
+    case 'ref-cancel': state.editingRef = null; state.refError = null; render(); return;
+    case 'ref-save': {
+      const name = (document.getElementById('ref-name-' + id).value || '').trim();
+      if(!name) return;
+      const list = el.dataset.kind === 'location' ? state.locations : state.categories;
+      const rec = list.find(x => x.id === id);
+      if(rec) rec.name = name;
+      state.editingRef = null;
+      render();
+      return;
+    }
+    case 'ref-del': {
+      const kind = el.dataset.kind;
+      const n = countIn(kind, id);
+      if(n > 0){
+        state.refError = {id, text:'ยังมีของค้างอยู่ ' + n + ' ' + countUnit(kind) + ' — ย้ายของออกก่อนจึงจะลบได้'};
+        render();
+        return;
+      }
+      const list = kind === 'location' ? state.locations : state.categories;
+      const rec = list.find(x => x.id === id);
+      state.refError = null;
+      confirmDialog('ลบ' + (kind === 'location' ? 'จุดเก็บ' : 'หมวดหมู่'),
+        '"' + rec.name + '" ว่างอยู่ ลบได้เลย',
+        'ลบ', () => { const i = list.findIndex(x => x.id === id); if(i >= 0) list.splice(i, 1); render(); showToast('ลบแล้ว'); });
+      return;
+    }
+    case 'ref-open': location.hash = '#/items'; state.filterLoc = id; state.filterCat = null; state.q = ''; render(); return;
+
+    case 'restore': {
+      // นำกลับ = เติมยอดให้ล็อตเดิม (restoreLot) — เพราะยอดกลับมา ล็อตนั้นจึงหลุดออกจากมุมใช้หมดแล้วเอง
+      const lot = state.lots.find(x => x.id === id);
+      if(!lot) return;
+      const product = productOf(lot.productId);
+      const input = document.querySelector('[data-restore-qty="' + id + '"]');
+      const fallback = (lastMovementOf(lot.id) && Math.abs(lastMovementOf(lot.id).delta)) || 1;
+      const qty = Math.max(1, parseInt(input && input.value ? input.value : fallback, 10) || fallback);
+      if(product && !state.units.includes(product.unit)) state.units.push(product.unit);
+      lot.quantity += qty;
+      pushMovement(lot.id, 'restore', qty);
+      render();
+      showToast('นำ "' + (product ? product.name : '') + '" กลับเข้ารายการแล้ว');
+      return;
+    }
+
+    case 'shop-add': {
+      const input = document.getElementById('shop-new');
+      const text = (input.value || '').trim();
+      if(!text){ input.focus(); return; }
+      state.shopping.push({id:'s-' + Date.now(), text});
+      render();
+      document.getElementById('shop-new').focus();
+      return;
+    }
+    case 'shop-del': state.shopping = state.shopping.filter(x => x.id !== id); render(); return;
+
+    case 'reset':
+      confirmDialog('รีเซ็ตข้อมูลตัวอย่าง', 'ข้อมูลปัจจุบันในเครื่องนี้จะถูกแทนที่ด้วยข้อมูลตัวอย่าง', 'รีเซ็ต', () => {
+        const fresh = seedData();
+        state = Object.assign({}, JSON.parse(JSON.stringify(fresh)), {q:'', filterLoc:null, filterCat:null, editingRef:null, refError:null, lastUsedUp:null});
+        location.hash = '#/items';
+        render();
+        showToast('คืนค่าข้อมูลตัวอย่างแล้ว');
+      });
+      return;
+
+    case 'overlay':
+      if(e.target === el) closeDialog();
+      return;
+    case 'dialog-cancel': closeDialog(); return;
+  }
+});
+
+/* ติ๊ก "ซื้อแล้ว" → หายจากรายการ (US-008) */
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-act="shop-toggle"]');
+  if(!el) return;
+  const id = el.dataset.id;
+  const rec = state.shopping.find(x => x.id === id);
+  state.shopping = state.shopping.filter(x => x.id !== id);
+  render();
+  showToast('ซื้อแล้ว — ลบ "' + (rec ? rec.text : '') + '" ออกจากรายการ');
+});
+
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeDialog(); });
+window.addEventListener('hashchange', render);
+
+/* ---------- ฟอร์มเพิ่มของ (US-001) ---------- */
+function bindAddForm(){
+  const unitSel = document.getElementById('f-unit');
+  const unitNew = document.getElementById('f-unit-new');
+  unitSel.addEventListener('change', () => {
+    const isNew = unitSel.value === '__new__';
+    unitNew.classList.toggle('hidden', !isNew);
+    if(isNew) unitNew.focus();
+  });
+  document.getElementById('add-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const errs = [];
+    const targetField = {name:'f-name', qty:'f-qty', unit:'f-unit', loc:'f-loc'};
+    const setErr = (key, msg) => {
+      const p = document.getElementById('e-' + key);
+      const field = document.getElementById(targetField[key]);
+      if(msg){ p.textContent = msg; p.classList.remove('hidden'); if(field) field.classList.add('invalid'); errs.push(msg); }
+      else { p.classList.add('hidden'); p.textContent = ''; if(field) field.classList.remove('invalid'); }
+    };
+
+    const name = document.getElementById('f-name').value.trim();
+    const qtyRaw = document.getElementById('f-qty').value;
+    const qty = parseInt(qtyRaw, 10);
+    const unit = unitSel.value === '__new__' ? unitNew.value.trim() : unitSel.value;
+    const locId = document.getElementById('f-loc').value;
+
+    setErr('name', name ? '' : 'กรอกชื่อของ');
+    setErr('qty', (!qtyRaw || !(qty > 0)) ? 'จำนวนต้องมากกว่า 0' : '');
+    setErr('unit', unit ? '' : 'เลือกหน่วยหรือพิมพ์หน่วยใหม่');
+    setErr('loc', locId ? '' : 'เลือกจุดเก็บ');
+
+    if(errs.length){
+      const sum = document.getElementById('e-summary');
+      sum.textContent = 'กรอกให้ครบ: ชื่อ · จำนวน · หน่วย · จุดเก็บ';
+      sum.classList.remove('hidden');
+      const firstInvalid = document.querySelector('#add-form .invalid');
+      if(firstInvalid) firstInvalid.focus();
+      return;
+    }
+    document.getElementById('e-summary').classList.add('hidden');
+
+    if(unit && !state.units.includes(unit)) state.units.push(unit); // ensureUnit()
+    // ล้างตัวกรองก่อนกลับไป #/items เพื่อให้เห็นการ์ดที่เพิ่งเพิ่มแน่นอน
+    state.q = ''; state.filterLoc = null; state.filterCat = null;
+    const catId = document.getElementById('f-cat').value || null;
+    const expiryDate = document.getElementById('f-exp').value || null;
+    const note = document.getElementById('f-note').value.trim();
+
+    /* สคีมา v2 · เบื้องหลังของฟอร์มเดียวนี้ทำงานสองชั้น (ผู้ใช้ยัง ≤3 ขั้นตอน):
+       1) หา/สร้าง "สินค้า" จาก (ชื่อ + หน่วย) → ชื่อ+หน่วยซ้ำกัน = สินค้าเดียวกัน (ensureProduct)
+       2) หา/สร้าง "ล็อต" จาก (สินค้า + จุดเก็บ + วันหมดอายุ) → ตรงกันหมด = รวมเข้าล็อตเดิม (receiveStock) */
+    let product = state.products.find(p => p.name === name && p.unit === unit) || null;
+    if(!product){
+      product = {id:'prod-' + Date.now(), name, unit, categoryId:catId, note};
+      state.products.push(product);
+    } else {
+      if(catId) product.categoryId = catId;
+      if(note) product.note = note;
+    }
+
+    let lot = state.lots.find(l => l.productId === product.id && l.locationId === locId && (l.expiryDate || null) === expiryDate) || null;
+    if(lot){ lot.quantity += qty; }
+    else { lot = {id:'lot-' + Date.now(), productId:product.id, locationId:locId, quantity:qty, expiryDate}; state.lots.push(lot); }
+    pushMovement(lot.id, 'in', qty);
+
+    location.hash = '#/items';
+    render();
+    showToast('เพิ่ม "' + name + '" แล้ว');
+  });
+}
+
+/* ---------- เริ่มทำงาน: ใช้หมดแล้ว + undo (US-003) ---------- */
+/* "ใช้หมดแล้ว" = หักยอดทุกล็อตของสินค้านั้นจนเหลือ 0 (ไม่ย้ายข้อมูลไปไหน)
+   เก็บ snapshot ยอดก่อนหักไว้ให้ปุ่ม "ย้อนกลับ" 5 วินาทีเรียกคืนได้ */
+function useUpAll(productId){
+  const row = stockRows().find(r => r.product.id === productId);
+  if(!row || !row.total) return;
+  const taken = row.activeLots.map(l => ({lotId:l.id, quantity:l.quantity}));
+  for(const item of taken){
+    const lot = state.lots.find(l => l.id === item.lotId);
+    if(!lot) continue;
+    pushMovement(lot.id, 'out', -item.quantity);
+    lot.quantity = 0;
+  }
+  state.lastUsedUp = {name: row.product.name, taken};
+  render();
+  showToast('ใช้ "' + row.product.name + '" หมดแล้ว', true);
+}
+function undoUsedUp(){
+  const e = state.lastUsedUp;
+  if(!e) return;
+  for(const item of e.taken){
+    const lot = state.lots.find(l => l.id === item.lotId);
+    if(!lot) continue;
+    lot.quantity += item.quantity;
+    pushMovement(lot.id, 'restore', item.quantity);
+  }
+  state.lastUsedUp = null;
+  hideToast();
+  render();
+  showToast('นำ "' + e.name + '" กลับเข้ารายการแล้ว');
+}
+
+if(!location.hash) location.hash = '#/items';
+render();
+</script>
+</body>
+</html>

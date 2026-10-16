@@ -1,0 +1,132 @@
+/*
+ * โครงสไตล์ของ S2 · Foundation & Data layer
+ *
+ * ⚠️ ROUND S2 = "โครงล้วน ไม่ตกแต่ง" ตามแผน R001
+ *    - ไฟล์นี้ตั้งใจให้เหลือน้อยที่สุด: อ่านออก + กดง่าย ไม่มีสี/เงาน/การ์ด
+ *    - ระบบดีไซน์โทเคน (สี · ระยะ · รัศมี · ขนาดแตะ 44px) จะมาติดตั้งที่นี่ใน S3
+ *      ตามตารางใน docs/design/sabayjai-pantry-ux-ui.md ข้อ 3
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, "Noto Sans Thai", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ---------- shell ---------- */
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #dbe1e8;
+}
+
+.app-header h1 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.add-btn {
+  display: inline-block;
+  min-height: 44px;
+  line-height: 44px;
+  padding: 0 12px;
+  margin-bottom: 8px;
+  border: 1px solid #dbe1e8;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nav-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  /* แถบเมนูเลื่อนแนวนอนได้ ไม่ดันหน้าให้กว้างเกินจอ (ยังไม่มี scroll แนวนอน) */
+  overflow-x: auto;
+}
+
+.nav-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #dbe1e8;
+  border-radius: 999px;
+  text-decoration: none;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.nav-chip[aria-current="page"] {
+  font-weight: 700;
+  border-width: 2px;
+}
+
+.app-main {
+  flex: 1 1 auto;
+  padding: 12px;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.app-footer {
+  padding: 8px 12px;
+  border-top: 1px solid #dbe1e8;
+  font-size: 13px;
+}
+
+/* ---------- view ทั่วไป (ลิสต์เรียบของ S2) ---------- */
+
+.view h2 {
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+.view-note {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 12px;
+}
+
+.item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  min-height: 44px;
+  padding: 8px 0;
+  border-bottom: 1px solid #dbe1e8;
+}
+
+.item-status {
+  font-size: 14px;
+}
+
+/* สถานะหมดอายุ: S2 แสดง "ข้อความ" กำกับก่อน (สีจริง + ป้าย มาที่ S3 ตามข้อ 4.2) */
+.item-row[data-status="expired"] .item-status,
+.item-row[data-status="expiring"] .item-status {
+  font-weight: 700;
+}
