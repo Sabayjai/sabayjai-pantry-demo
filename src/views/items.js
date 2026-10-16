@@ -1,22 +1,24 @@
 /**
- * views/items.js — จอ #/items ของ S2: **ลิสต์เรียบ** จาก seed (สคีมา v2)
+ * views/items.js — จอ #/items (R001 · S3 · Task 8)
  *
- * เป้าหมายของรอบนี้คือ "ยืนยันว่าชั้นข้อมูลต่อกับจอได้จริง" ไม่ใช่ความสวย
- * → ไม่มีการ์ด ไม่มีป้ายสี ไม่มีปุ่ม −/+ (ของพวกนั้นคือ S3 + R004/US-002/US-003)
+ * เปลี่ยนจาก "ลิสต์เรียบของ S2" เป็น **การ์ด + ป้ายสถานะ** ตามแบบร่าง UX/UI ข้อ 5.1
+ * · หนึ่งการ์ด = หนึ่งสินค้า — ยอดที่แสดง = ผลรวมทุก**ล็อต**ที่ยังมีของ
+ * · ป้ายวันหมดอายุใช้ล็อตที่หมดอายุใกล้สุด (`nearestExpiryLot`) — ข้อความ+สีคู่กันเสมอ (ข้อ 4.2)
+ * · ล็อตที่ยังมีของของสินค้านั้นแสดงในใบเดียวกัน เรียงตาม FEFO (เห็นว่าทยอยใช้จะหยิบล็อตไหนก่อน)
  *
- * สคีมา v2: หนึ่งแถวต่อหนึ่ง **สินค้า** (รวมล็อตของสินค้านั้น) — ของไม่ซ้ำหลายแถว
- * สถานะหมดอายุ: ใช้ล็อตที่หมดอายุใกล้สุด · แสดงเป็น "ข้อความ" เสมอ (ข้อ 4.2)
+ * ยังไม่ทำในรอบนี้ (ยกไป Release ที่รับผิดชอบ): ปุ่ม −/+ และ "ใช้หมดแล้ว" (R005 · US-003) ·
+ * ค้นหา/กรอง (R004 · US-002) · แถบสรุปกดไป #/expiring (R006 · US-005) — รอบนี้แถบสรุปเป็นข้อความอ่านอย่างเดียว
  */
 import { el } from '../ui/dom.js';
 import { listCategories, listLots, listLocations, listProducts } from '../data/db.js';
 import {
   expiringSummary,
-  expiryLabel,
   expiryStatus,
   groupByProduct,
   nearestExpiryLot,
   sortLotsByFEFO,
 } from '../data/selectors.js';
+import { emptyState, statusBadge, summaryBar } from '../ui/components.js';
 
 export function renderItems() {
   const lots = listLots();
@@ -24,68 +26,94 @@ export function renderItems() {
   const categoryNames = new Map(listCategories().map((category) => [category.id, category.name]));
   const summary = expiringSummary(lots);
 
-  const rows = groupByProduct(listProducts(), lots).filter((row) => row.total > 0);
+  const rows = sortForDisplay(groupByProduct(listProducts(), lots).filter((row) => row.total > 0));
 
-  const listItems = rows.map((row) => {
-    const { product, activeLots: active, total } = row;
+  const cards = rows.map((row) => {
+    const { product, activeLots: active, total, nearest, status } = row;
     const locations = [...new Set(active.map((lot) => lot.locationId))]
       .map((id) => locationNames.get(id) ?? 'ไม่ระบุจุดเก็บ')
       .join(', ');
-    const batchNote = active.length > 1 ? `${active.length} ล็อต` : null;
-    const nearest = nearestExpiryLot(active);
-    const label = nearest ? expiryLabel(nearest) : '';
 
-    const details = [
+    const meta = [
       `${total} ${product.unit}`,
       locations,
       product.categoryId ? categoryNames.get(product.categoryId) ?? null : null,
-      batchNote,
-      product.note ? `หมายเหตุ: ${product.note}` : null,
-    ].filter(Boolean);
+      active.length > 1 ? `${active.length} ล็อต` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
 
     return el(
-      'li',
-      { class: 'item-row', dataset: { id: product.id, status: nearest ? expiryStatus(nearest) : 'none' } },
-      el('span', { class: 'item-name' }, product.name),
-      el('span', { class: 'item-details' }, details.join(' · ')),
-      label ? el('span', { class: 'item-status' }, label) : null,
-    );
-  });
-
-  // ล็อตที่ยังมีของ เรียงตาม FEFO — ให้เห็นว่า "ทยอยใช้" จะหยิบล็อตไหนก่อน
-  const lotRows = sortLotsByFEFO(activeLotsOf(rows)).map((lot) => {
-    const product = listProducts().find((entry) => entry.id === lot.productId);
-    const location = locationNames.get(lot.locationId) ?? 'ไม่ระบุจุดเก็บ';
-    const label = expiryLabel(lot);
-    return el(
-      'li',
-      { class: 'item-row', dataset: { id: lot.id, status: expiryStatus(lot) } },
-      el('span', { class: 'item-name' }, `↳ ${product?.name ?? 'ไม่พบสินค้า'}`),
-      el('span', { class: 'item-details' }, `${lot.quantity} ${product?.unit ?? ''} · ${location}`),
-      label ? el('span', { class: 'item-status' }, label) : null,
+      'article',
+      {
+        class: 'card',
+        dataset: { id: product.id, status },
+      },
+      el(
+        'div',
+        { class: 'card-top' },
+        el('h3', { class: 'card-name' }, product.name),
+        statusBadge(nearest),
+      ),
+      el('p', { class: 'card-meta' }, meta),
+      product.note ? el('p', { class: 'card-meta' }, `หมายเหตุ: ${product.note}`) : null,
+      active.length > 1 ? lotList(active, product, locationNames) : null,
     );
   });
 
   return el(
     'section',
     { class: 'view view-items' },
-    el('h2', {}, `รายการของทั้งหมด (${rows.length} สินค้า)`),
+    summaryBar(summary),
+    el('h2', {}, `ของในบ้าน (${rows.length} สินค้า)`),
+    rows.length
+      ? el('div', { class: 'cards' }, ...cards)
+      : emptyState({
+          text: 'ยังไม่มีของในตู้ — เริ่มจากเพิ่มชิ้นแรก',
+          actionLabel: '＋ เพิ่มของ',
+          actionHref: '#/add',
+        }),
     el(
       'p',
       { class: 'view-note' },
-      `ต้องใช้ก่อน ${summary.total} ล็อต · หมดอายุ ${summary.expired} · ใกล้หมดอายุ ${summary.expiring}`,
+      'การ์ด + ป้ายสถานะตามแบบร่าง UX/UI · ปุ่มปรับจำนวนและ "ใช้หมดแล้ว" อยู่ใน R005 · ค้นหา/กรองอยู่ใน R004 (US-002/US-003)',
     ),
-    el(
-      'p',
-      { class: 'view-note' },
-      'S2 · ลิสต์เรียบจากข้อมูลตัวอย่าง (สคีมา v2: สินค้า + ล็อต) — การ์ด/ป้ายสถานะ/ปุ่มปรับจำนวนจะทำใน S3 และ R004',
-    ),
-    rows.length ? el('ul', { class: 'item-list' }, ...listItems) : el('p', {}, 'ยังไม่มีของในรายการ — เพิ่มของได้ที่เมนู "เพิ่ม"'),
-    rows.length ? el('h3', {}, 'ล็อตที่ยังมีของ (เรียงตามหมดอายุใกล้สุด)') : null,
-    rows.length ? el('ul', { class: 'item-list' }, ...lotRows) : null,
   );
 }
 
-function activeLotsOf(rows) {
-  return rows.flatMap((row) => row.activeLots);
+/**
+ * ลำดับการ์ดตาม **OQ-R13 (ตอบ A · 2026-10-16): แดง → เหลือง → ที่เหลือ (ชื่อ ก-ฮ)**
+ * สถานะของสินค้าหนึ่งตัวดูจากล็อตที่หมดอายุใกล้สุด · ของที่ไม่ระบุวันหมดอายุอยู่กลุ่ม "ที่เหลือ"
+ * คำนวณสถานะ/ล็อตใกล้สุดครั้งเดียวตรงนี้ แล้วส่งต่อให้การ์ดใช้ (ไม่คำนวณซ้ำ)
+ */
+function sortForDisplay(rows) {
+  const STATUS_ORDER = { expired: 0, expiring: 1 };
+  return rows
+    .map((row) => {
+      const nearest = nearestExpiryLot(row.activeLots);
+      return { ...row, nearest, status: nearest ? expiryStatus(nearest) : 'none' };
+    })
+    .sort((a, b) => {
+      const orderA = STATUS_ORDER[a.status] ?? 2;
+      const orderB = STATUS_ORDER[b.status] ?? 2;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.product.name.localeCompare(b.product.name, 'th');
+    });
+}
+
+/** ล็อตที่ยังมีของของสินค้าหนึ่งตัว — เรียงตาม FEFO พร้อมป้ายวันหมดอายุของล็อตนั้น */
+function lotList(activeLots, product, locationNames) {
+  return el(
+    'ul',
+    { class: 'card-lots' },
+    ...sortLotsByFEFO(activeLots).map((lot) =>
+      el(
+        'li',
+        { dataset: { id: lot.id, status: expiryStatus(lot) } },
+        el('span', { class: 'lot-qty' }, `${lot.quantity} ${product.unit}`),
+        el('span', { class: 'lot-where' }, locationNames.get(lot.locationId) ?? 'ไม่ระบุจุดเก็บ'),
+        statusBadge(lot),
+      ),
+    ),
+  );
 }

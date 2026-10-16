@@ -42,18 +42,41 @@
 
   /* ---------- shell: หัวเรื่อง + เมนู ---------- */
   .wrap{max-width:960px;margin:0 auto;padding:0 16px}
-  .topbar{position:sticky;top:0;z-index:6;background:var(--sj-surface);box-shadow:0 1px 0 var(--sj-border)}
-  .app-header{background:var(--sj-surface);border-bottom:1px solid var(--sj-border)}
+
+  /* shell · <768px = เมนูหลังปุ่ม ☰ (OQ-R14) · ≥768px = แถบเมนูด้านบน · ≥1024px = เมนูด้านซ้าย (OQ-R11) */
+  /* minmax(0,1fr) จำเป็น — ถ้าใช้ 1fr เฉย ๆ ความกว้าง min-content ของแถบเมนูแนวนอนจะดันคอลัมน์ให้กว้างเกินจอ (เกิด scroll แนวนอน) */
+  /* grid-template-rows + align-content:start จำเป็น — ถ้าปล่อยเป็น auto ล้วน ที่ว่างที่เหลือจะถูก "ยืด" ใส่ทุกแถว
+     (หัวจอโป่ง 182 px แทน 57 px เมื่อจอสั้น — เจอจริงที่ #/expiring บนจอ 375×1040) */
+  .shell{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"header" "nav" "main" "foot";grid-template-rows:auto auto minmax(0,1fr) auto;align-content:start}
+  .app-header{grid-area:header;position:sticky;top:0;z-index:6;background:var(--sj-surface);border-bottom:1px solid var(--sj-border)}
   .app-header .wrap{display:flex;align-items:center;gap:12px;min-height:56px;padding-top:8px;padding-bottom:8px}
   .app-header h1{font-size:20px;font-weight:700;flex:1}
-  .nav{background:var(--sj-surface)}
-  .nav .wrap{display:flex;gap:8px;overflow-x:auto;padding-top:8px;padding-bottom:8px;scrollbar-width:thin}
-  .nav a{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:var(--sj-surface-2);color:var(--sj-text);text-decoration:none;font-size:14px;min-height:var(--sj-tap)}
+  /* จอ <768px · OQ-R14 — เมนูยาวเกินกว่าจะพาดเป็นแถว (7 รายการ ≈ 570 px จาก 358 px) จึงซ่อนหลังปุ่ม ☰ */
+  /* ไอคอนล้วน (☰ เป็นตัวอักษร ไม่ใช่ไฟล์ภาพ) — ถ้าใส่คำว่า "เมนู" ด้วย ชื่อแอปจะตัดเป็น 2 บรรทัดที่ 375 px */
+  .menu-toggle{display:inline-flex;align-items:center;justify-content:center;min-width:var(--sj-tap);min-height:var(--sj-tap);padding:0 8px;border:1px solid var(--sj-border);border-radius:var(--sj-radius-sm);background:var(--sj-surface);color:var(--sj-text);font:inherit;font-size:18px;line-height:1;cursor:pointer}
+  .nav{grid-area:nav;background:var(--sj-surface);display:none}
+  .shell[data-menu-open="true"] .nav{display:block}
+  .nav .wrap{display:flex;flex-direction:column;gap:6px;padding-top:4px;padding-bottom:12px}
+  .nav a{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:var(--sj-radius-sm);background:var(--sj-surface-2);color:var(--sj-text);text-decoration:none;font-size:14px;min-height:var(--sj-tap)}
   .nav a[aria-current="page"]{background:var(--sj-primary);color:#fff}
+  @media (min-width:768px){
+    .menu-toggle{display:none}
+    .nav{display:block}
+    .nav .wrap{flex-direction:row;gap:8px;overflow-x:auto;padding-top:8px;padding-bottom:8px;scrollbar-width:thin}
+    .nav a{flex:0 0 auto;border-radius:999px}
+  }
   .nav a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--sj-primary);outline-offset:2px}
 
-  main{padding:16px 0 110px}
-  .foot{max-width:960px;margin:0 auto;padding:0 16px 24px;color:var(--sj-text-muted);font-size:12px}
+  main{grid-area:main;padding:16px 0 110px}
+  .foot{grid-area:foot;max-width:960px;margin:0 auto;padding:0 16px 24px;color:var(--sj-text-muted);font-size:12px}
+
+  /* จอใหญ่: เมนูย้ายไปเป็นแถบซ้าย (แนวตั้ง) · หัวเรื่องเต็มความกว้าง · เมนูติดหนึบใต้หัวเรื่อง */
+  @media (min-width:1024px){
+    .shell{grid-template-columns:240px minmax(0,1fr);grid-template-areas:"header header" "nav main" "nav foot";grid-template-rows:auto minmax(0,1fr) auto}
+    .nav{position:sticky;top:57px;align-self:start;max-height:calc(100vh - 57px);overflow-y:auto;border-right:1px solid var(--sj-border)}
+    .nav .wrap{flex-direction:column;gap:6px;overflow:visible;padding-top:12px;padding-bottom:12px}
+    .nav a{width:100%;border-radius:var(--sj-radius-sm);justify-content:flex-start}
+  }
 
   /* ---------- ปุ่ม ---------- */
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:var(--sj-tap);padding:0 16px;border-radius:var(--sj-radius-sm);border:1px solid transparent;background:var(--sj-surface-2);color:var(--sj-text);font:inherit;font-size:15px;cursor:pointer}
@@ -150,22 +173,23 @@
   <span class="hint">ตรวจ: ① การ์ด (1 ใบ = 1 สินค้า) + ป้ายเหลือง/แดง ② กด − จนถึง 0 แล้วดู toast “ย้อนกลับ” ③ ค้นหา/กรองพร้อมกัน ④ ฟอร์มเพิ่มของ (สร้างสินค้า+ล็อต) ⑤ ลบจุดเก็บที่มีของ ⑥ รีเซ็ตข้อมูลตัวอย่าง ⑦ ย่อ/ขยายหน้าต่าง 375 / 768 / 1280</span>
 </div>
 
-<div class="topbar">
+<div class="shell">
   <header class="app-header">
     <div class="wrap">
+      <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="nav" aria-label="เมนูหลัก" title="เมนูหลัก">☰</button>
       <h1>สบายใจ Pantry</h1>
       <a class="btn btn-primary" href="#/add">＋ เพิ่มของ</a>
     </div>
   </header>
 
   <nav class="nav" id="nav" aria-label="เมนูหลัก"></nav>
+
+  <main>
+    <div class="wrap" id="app"></div>
+  </main>
+
+  <footer class="foot">เดโมแบบร่าง · ข้อมูลอยู่ในเครื่องนี้เท่านั้น (ไม่มี Backend · ไม่มีการซิงก์ · ไม่มีบัญชี)</footer>
 </div>
-
-<main>
-  <div class="wrap" id="app"></div>
-</main>
-
-<footer class="foot">เดโมแบบร่าง · ข้อมูลอยู่ในเครื่องนี้เท่านั้น (ไม่มี Backend · ไม่มีการซิงก์ · ไม่มีบัญชี)</footer>
 
 <div class="toast-wrap" id="toast-root"></div>
 <div id="dialog-root"></div>
@@ -326,9 +350,9 @@ function seedData(){
   };
 }
 
+/* เมนู 7 รายการ — ตัด /add ออกตาม OQ-R15 (2026-10-16) เพราะมีปุ่ม "＋ เพิ่มของ" ที่หัวจออยู่แล้ว */
 const ROUTES = [
   {path:'/items',      label:'รายการ',      title:'รายการของทั้งหมด'},
-  {path:'/add',        label:'เพิ่ม',        title:'เพิ่มของ'},
   {path:'/locations',  label:'จุดเก็บ',      title:'จุดเก็บ'},
   {path:'/categories', label:'หมวดหมู่',      title:'หมวดหมู่'},
   {path:'/expiring',   label:'ใกล้หมดอายุ',   title:'ต้องใช้ก่อน'},
@@ -336,6 +360,8 @@ const ROUTES = [
   {path:'/shopping',   label:'ต้องซื้อ',      title:'รายการที่ต้องซื้อ'},
   {path:'/settings',   label:'ตั้งค่า',       title:'ตั้งค่า'}
 ];
+/* เส้นทางที่เข้าร่วมได้จริง 8 ทาง — /add อยู่ในนี้แต่ไม่อยู่ในเมนู (เข้าจากปุ่มที่หัวจอ) */
+const ROUTE_PATHS = ROUTES.map(r => r.path).concat('/add');
 
 /* =========================================================================
    2) สถานะของ prototype
@@ -351,6 +377,24 @@ const app = document.getElementById('app');
 const nav = document.getElementById('nav');
 const toastRoot = document.getElementById('toast-root');
 const dialogRoot = document.getElementById('dialog-root');
+
+/* ---------- เมนูจอโทรศัพท์ (OQ-R14) — ตรงกับ src/ui/shell.js ของแอปจริง ---------- */
+const shellEl = document.querySelector('.shell');
+const menuToggle = document.getElementById('menu-toggle');
+function setMenuOpen(open){
+  shellEl.dataset.menuOpen = open ? 'true' : 'false';
+  menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+menuToggle.addEventListener('click', () => setMenuOpen(shellEl.dataset.menuOpen !== 'true'));
+nav.addEventListener('click', (e) => { if(e.target.closest('a')) setMenuOpen(false); });
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && shellEl.dataset.menuOpen === 'true'){ setMenuOpen(false); menuToggle.focus(); }
+});
+document.addEventListener('click', (e) => {
+  if(shellEl.dataset.menuOpen !== 'true') return;
+  if(shellEl.contains(e.target)) return;
+  setMenuOpen(false);
+});
 
 /* ---------- เครื่องมือย่อ ---------- */
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -739,7 +783,7 @@ function viewSettings(){
    ========================================================================= */
 function currentPath(){
   const h = location.hash.replace(/^#/, '');
-  const found = ROUTES.some(r => r.path === h);
+  const found = ROUTE_PATHS.indexOf(h) >= 0;
   return found ? h : '/items';
 }
 
@@ -747,6 +791,7 @@ function renderNav(){
   const cur = currentPath();
   nav.innerHTML = '<div class="wrap">' + ROUTES.map(r =>
     '<a href="#' + r.path + '"' + (r.path === cur ? ' aria-current="page"' : '') + '>' + r.label + '</a>').join('') + '</div>';
+  setMenuOpen(false); /* เปลี่ยนเส้นทางแล้วปิดเมนูจอโทรศัพท์ */
 }
 
 function render(){

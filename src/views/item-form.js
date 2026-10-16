@@ -5,7 +5,7 @@ export function renderItemForm() {
   return el(
     'section',
     { class: 'view view-add' },
-    el('h2', {}, 'เพิ่มของเข้าจุดเก็บ'),
+    el('h2', {}, 'เพิ่มของ'),
     el(
       'p',
       { class: 'view-note' },
