@@ -125,6 +125,19 @@ a {
   display: block;
 }
 
+@media (max-width: 767px) {
+  .nav {
+    position: fixed;
+    top: var(--menu-top);
+    left: 0;
+    right: 0;
+    z-index: 5;
+    max-height: calc(100dvh - var(--menu-top));
+    overflow-y: auto;
+    box-shadow: 0 8px 16px rgb(0 0 0 / 12%);
+  }
+}
+
 .nav .wrap {
   display: flex;
   flex-direction: column;

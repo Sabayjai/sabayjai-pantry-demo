@@ -97,6 +97,10 @@ export function createShell() {
 /** เปิด/ปิดเมนูของจอโทรศัพท์ — สถานะอยู่ที่ data-menu-open ของ shell (CSS อ่านจากตัวนี้) */
 export function setMenuOpen(root, toggle, open) {
   if (!root) return;
+  if (open) {
+    const headerBottom = root.querySelector('.app-header').getBoundingClientRect().bottom;
+    root.style.setProperty('--menu-top', `${headerBottom}px`);
+  }
   root.dataset.menuOpen = open ? 'true' : 'false';
   if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
