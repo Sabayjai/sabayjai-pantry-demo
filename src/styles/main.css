@@ -664,7 +664,7 @@ textarea:focus-visible {
 
 /* ---------- toast (R003 · US-001 อ่านอย่างเดียว) ---------- */
 
-/* โทนสว่างแต่แยกจากการ์ดขาว — พื้นเขียวอ่อน + ขอบเขียวเดียวกับปุ่ม (ไม่ดำทึบ · ไม่กลืน) */
+/* กรอบบางสีเขียวจาง + พื้นทึบอ่านชัด (ขอบเขียวทึบดูหนัก · โปร่งใสอ่านไม่ออก) */
 .toast {
   position: fixed;
   left: 50%;
@@ -675,13 +675,13 @@ textarea:focus-visible {
   width: min(480px, calc(100vw - 32px));
   padding: 12px 20px;
   border-radius: 16px;
-  background: var(--sj-primary-soft);
+  background: var(--sj-surface);
   color: var(--sj-text);
-  border: 1px solid var(--sj-primary);
+  border: 1px solid color-mix(in srgb, var(--sj-primary) 35%, white);
   font-size: 15px;
   line-height: 1.4;
   text-align: center;
-  box-shadow: 0 8px 24px rgb(31 122 90 / 0.22);
+  box-shadow: 0 8px 24px rgb(39 49 44 / 0.16);
 }
 
 /* ---------- toast-undo (R005 · US-003) ---------- */
@@ -701,12 +701,12 @@ textarea:focus-visible {
   gap: 12px;
   padding: 12px 12px 12px 16px;
   border-radius: 16px;
-  background: var(--sj-primary-soft);
+  background: var(--sj-surface);
   color: var(--sj-text);
-  border: 1px solid var(--sj-primary);
+  border: 1px solid color-mix(in srgb, var(--sj-primary) 35%, white);
   font-size: 15px;
   line-height: 1.4;
-  box-shadow: 0 8px 24px rgb(31 122 90 / 0.22);
+  box-shadow: 0 8px 24px rgb(39 49 44 / 0.16);
 }
 
 .undo-toast > span {
