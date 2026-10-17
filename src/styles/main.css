@@ -412,6 +412,362 @@ textarea:focus-visible {
   font-weight: 500;
 }
 
+/* ป้ายใช้งาน/พักใช้ของ master data (R002 · Card ล้วน) — สี+ข้อความคู่กันเสมอ */
+.badge-active {
+  background: var(--sj-primary-weak);
+  border-color: var(--sj-primary);
+  color: var(--sj-primary);
+}
+
+.badge-inactive {
+  background: var(--sj-surface-2);
+  border-color: var(--sj-border);
+  color: var(--sj-text-muted);
+}
+
+/* ---------- ตัวกรองแบบ chip (R002 · ทั้งหมด/ใช้งาน/พักใช้) ---------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sj-tap);
+  padding: 0 16px;
+  border: 1px solid var(--sj-border);
+  border-radius: 999px;
+  background: var(--sj-surface);
+  color: var(--sj-text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--sj-primary);
+  border-color: var(--sj-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ---------- แถวค้นหา + ตัวกรองจอรายการ (R004 · US-002) ---------- */
+
+.search-row {
+  display: flex;
+  gap: 8px;
+}
+
+.search-row input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--sj-tap);
+  padding: 0 12px;
+  border: 1px solid var(--sj-border);
+  border-radius: var(--sj-radius-sm);
+  font: inherit;
+  font-size: 15px;
+  background: #fff;
+  color: var(--sj-text);
+}
+
+/* ตัวกรองแบบ dropdown คู่ + chip แสดงค่าที่เลือก (R004 · OQ-R4-1 = A) */
+
+.filter-row {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* ป้ายชื่อเหนือ dropdown (ตัวกรองจอรายการ) — ค่าที่เลือกในช่องสั้น อ่านง่าย ไม่ถูกตัด */
+.field-inline {
+  gap: 4px;
+}
+
+.field-inline > label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sj-text-muted);
+}
+
+.filter-row select {
+  min-width: 0;
+  width: 100%;
+  min-height: var(--sj-tap);
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--sj-border);
+  border-radius: var(--sj-radius-sm);
+  font: inherit;
+  font-size: 15px;
+  color: var(--sj-text);
+  text-overflow: ellipsis;
+  /* ซ่อนลูกศรเดิมของเบราว์เซอร์ (ชิดขอบเกินไป) แล้ววางลูกศรอักษรเองผ่าน .select-chevron */
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+}
+
+.field-inline {
+  position: relative;
+}
+
+/* สามเหลี่ยมวาดด้วย border — ขนาดพอดีไม่เด่นเกินเนื้อหา (รอบก่อนใหญ่จนเด่นเกินใคร) */
+.select-chevron {
+  position: absolute;
+  right: 14px;
+  bottom: 22px;
+  transform: translateY(50%);
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--sj-text-muted);
+}
+
+.chips-label {
+  flex: 0 0 auto;
+  align-self: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sj-text-muted);
+}
+
+/* ---------- การ์ดอ้างอิง (R002 · จุดเก็บ/หมวดหมู่ ใช้โครง .card เดียวกับ #/items) ---------- */
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.card-actions .btn {
+  min-height: var(--sj-tap);
+}
+
+/* ฟอร์ม inline ใต้หัวจอ (R002 · OQ-R2-4) */
+.inline-form {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--sj-border);
+  border-radius: var(--sj-radius);
+  background: var(--sj-surface);
+}
+
+.inline-form label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.inline-form input[type="text"] {
+  min-height: var(--sj-tap);
+  padding: 0 12px;
+  border: 1px solid var(--sj-border);
+  border-radius: var(--sj-radius-sm);
+  font: inherit;
+  font-size: 15px;
+  background: #fff;
+  color: var(--sj-text);
+}
+
+.inline-form .form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.field-error {
+  font-size: 13px;
+  color: var(--sj-danger);
+}
+
+/* ---------- ฟอร์มเพิ่มของ (R003 · US-001) ---------- */
+
+.form {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--sj-border);
+  border-radius: var(--sj-radius);
+  background: var(--sj-surface);
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field > label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field .required {
+  color: var(--sj-danger);
+}
+
+.field input[type="text"],
+.field input[type="number"],
+.field input[type="date"],
+.field select,
+.field textarea {
+  min-height: var(--sj-tap);
+  padding: 0 12px;
+  border: 1px solid var(--sj-border);
+  border-radius: var(--sj-radius-sm);
+  font: inherit;
+  font-size: 15px;
+  background: #fff;
+  color: var(--sj-text);
+  max-width: 100%;
+}
+
+.field textarea {
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.field-row {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .field-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suggest .chip {
+  min-height: var(--sj-tap);
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---------- toast (R003 · US-001 อ่านอย่างเดียว) ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 30;
+  max-width: min(480px, calc(100vw - 32px));
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--sj-text);
+  color: #fff;
+  font-size: 15px;
+  text-align: center;
+}
+
+/* ---------- toast-undo (R005 · US-003) ---------- */
+
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(480px, calc(100vw - 32px));
+  padding: 10px 10px 10px 20px;
+  border-radius: 999px;
+  background: var(--sj-text);
+  color: #fff;
+  font-size: 15px;
+}
+
+.undo-toast .btn {
+  min-height: var(--sj-tap);
+  flex: 0 0 auto;
+}
+
+/* ---------- stepper ปรับจำนวนบนการ์ด (R005 · US-003) ---------- */
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.stepper .btn {
+  min-width: var(--sj-tap);
+  min-height: var(--sj-tap);
+  padding: 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.stepper-qty {
+  min-width: 3ch;
+  text-align: center;
+  font-weight: 700;
+}
+
+.card-move {
+  margin-top: 8px;
+}
+
+/* ---------- dialog ยืนยัน (R002 · OQ-R2-3) ---------- */
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(31 41 51 / 0.45);
+}
+
+.dialog {
+  display: grid;
+  gap: 10px;
+  width: min(440px, 100%);
+  padding: 20px;
+  border: 1px solid var(--sj-border);
+  border-radius: var(--sj-radius);
+  background: var(--sj-surface);
+}
+
+.dialog h3 {
+  font-size: 16px;
+}
+
+.dialog p {
+  font-size: 14px;
+  color: var(--sj-text);
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 /* ---------- สถานะว่าง (empty-state) ---------- */
 
 .empty {
@@ -474,4 +830,15 @@ textarea:focus-visible {
 .item-row[data-status="expiring"] .item-status {
   color: var(--sj-warn);
   font-weight: 600;
+}
+
+/* ---------- กลุ่มในจอต้องใช้ก่อน (R006) ---------- */
+.expiring-group h3 {
+  margin: 16px 0 0;
+  font-size: 15px;
+}
+
+/* ---------- ฟอร์มย้ายล็อตในการ์ด (R005 · US-009) ---------- */
+.move-form {
+  list-style: none;
 }

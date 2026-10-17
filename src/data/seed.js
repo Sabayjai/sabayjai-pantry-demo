@@ -31,21 +31,21 @@ export const DEFAULT_UNITS = [
   'มล.',
 ];
 
-/** 5 จุดเก็บเริ่มต้น (requirement ข้อ 5.2) */
+/** 5 จุดเก็บเริ่มต้น (requirement ข้อ 5.2) · R002: master data มีธง isActive (พักใช้แทนลบถาวร) */
 export const DEFAULT_LOCATIONS = [
-  { id: 'loc-fridge', name: 'ตู้เย็น' },
-  { id: 'loc-freezer', name: 'ช่องแช่แข็ง' },
-  { id: 'loc-pantry', name: 'ตู้กับข้าว' },
-  { id: 'loc-shelf', name: 'ชั้นวางของ' },
-  { id: 'loc-basket', name: 'ตะกร้าผัก-ผลไม้' },
+  { id: 'loc-fridge', name: 'ตู้เย็น', isActive: true },
+  { id: 'loc-freezer', name: 'ช่องแช่แข็ง', isActive: true },
+  { id: 'loc-pantry', name: 'ตู้กับข้าว', isActive: true },
+  { id: 'loc-shelf', name: 'ชั้นวางของ', isActive: true },
+  { id: 'loc-basket', name: 'ตะกร้าผัก-ผลไม้', isActive: true },
 ];
 
-/** 4 หมวดหมู่เริ่มต้น (requirement ข้อ 5.2) */
+/** 4 หมวดหมู่เริ่มต้น (requirement ข้อ 5.2) · R002: มีธง isActive เช่นกัน */
 export const DEFAULT_CATEGORIES = [
-  { id: 'cat-ready', name: 'พร้อมกิน' },
-  { id: 'cat-ingredient', name: 'วัตถุดิบ' },
-  { id: 'cat-seasoning', name: 'เครื่องปรุง' },
-  { id: 'cat-household', name: 'ของใช้ในครัว' },
+  { id: 'cat-ready', name: 'พร้อมกิน', isActive: true },
+  { id: 'cat-ingredient', name: 'วัตถุดิบ', isActive: true },
+  { id: 'cat-seasoning', name: 'เครื่องปรุง', isActive: true },
+  { id: 'cat-household', name: 'ของใช้ในครัว', isActive: true },
 ];
 
 /**
@@ -58,7 +58,7 @@ const SEED_STOCK = [
   { id: 'prod-cabbage', name: 'ผักกาดขาว', unit: 'หัว', categoryId: 'cat-ingredient', note: '', lots: [{ id: 'lot-cabbage-1', locationId: 'loc-basket', quantity: 1, expiryOffset: -1 }] },
   { id: 'prod-egg', name: 'ไข่ไก่', unit: 'ฟอง', categoryId: 'cat-ingredient', note: '', lots: [{ id: 'lot-egg-1', locationId: 'loc-fridge', quantity: 6, expiryOffset: null }] },
   { id: 'prod-chicken', name: 'อกไก่แช่แข็ง', unit: 'แพ็ก', categoryId: 'cat-ingredient', note: '', lots: [{ id: 'lot-chicken-1', locationId: 'loc-freezer', quantity: 1, expiryOffset: 30 }] },
-  { id: 'prod-rice', name: 'ข้าวสาร', unit: 'ถุง', categoryId: 'cat-ingredient', note: '', lots: [{ id: 'lot-rice-1', locationId: 'loc-pantry', quantity: 2, expiryOffset: null }] },
+  { id: 'prod-rice', name: 'ข้าวสาร', unit: 'ถุง', categoryId: 'cat-ingredient', note: 'ของยาย', lots: [{ id: 'lot-rice-1', locationId: 'loc-pantry', quantity: 2, expiryOffset: null }] },
   { id: 'prod-fishsauce', name: 'น้ำปลา', unit: 'ขวด', categoryId: 'cat-seasoning', note: '', lots: [{ id: 'lot-fishsauce-1', locationId: 'loc-shelf', quantity: 1, expiryOffset: null }] },
   { id: 'prod-tissue', name: 'กระดาษทิชชู่', unit: 'แพ็ก', categoryId: 'cat-household', note: '', lots: [{ id: 'lot-tissue-1', locationId: 'loc-shelf', quantity: 1, expiryOffset: null }] },
 ];
@@ -86,8 +86,8 @@ export function createSeed(now = new Date()) {
   const createdAt = now.toISOString();
   const today = todayDateOnly(now);
 
-  const locations = DEFAULT_LOCATIONS.map((location) => ({ ...location, createdAt }));
-  const categories = DEFAULT_CATEGORIES.map((category) => ({ ...category, createdAt }));
+  const locations = DEFAULT_LOCATIONS.map((location) => ({ ...location, isActive: location.isActive !== false, createdAt }));
+  const categories = DEFAULT_CATEGORIES.map((category) => ({ ...category, isActive: category.isActive !== false, createdAt }));
 
   const products = [];
   const lots = [];

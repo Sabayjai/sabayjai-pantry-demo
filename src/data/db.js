@@ -303,8 +303,12 @@ export function restoreLot(lotId, quantity) {
   const lot = requireLot(lotId);
   const qty = Number(quantity);
   if (!Number.isFinite(qty) || qty <= 0) throw new ValidationError({ quantity: 'จำนวนต้องมากกว่า 0' });
-  if (lot.locationId && !state.locations.some((location) => location.id === lot.locationId)) {
-    throw new ValidationError({ locationId: 'จุดเก็บเดิมถูกลบไปแล้ว — เลือกจุดเก็บใหม่' });
+  if (lot.locationId) {
+    const location = state.locations.find((entry) => entry.id === lot.locationId);
+    if (!location) throw new ValidationError({ locationId: 'จุดเก็บเดิมถูกลบไปแล้ว — เลือกจุดเก็บใหม่' });
+    if (location.isActive === false) {
+      throw new ValidationError({ locationId: 'จุดเก็บนี้พักใช้อยู่ — เปิดใช้ก่อนจึงนำกลับได้' });
+    }
   }
 
   const now = new Date().toISOString();
@@ -315,6 +319,74 @@ export function restoreLot(lotId, quantity) {
   pushMovement(lot, 'restore', qty, now);
   commit();
   return lot;
+}
+
+/**
+ * ย้ายของไปจุดเก็บอื่น (US-009 · OQ-R16 + คำตัดสิน 2026-10-17: ย้ายบางส่วนได้)
+ * - ไม่ระบุ quantity = ย้ายทั้งล็อต → ยอดไม่เปลี่ยน → ไม่เขียน movement (อัปเดต updatedAt เท่านั้น)
+ * - ระบุ quantity (< ยอด) = แยกบางส่วน → ล็อตเดิมลด + ล็อตปลายทางเพิ่ม (หา batch เดียวกัน: สินค้า+จุดเก็บ+วันหมดอายุ)
+ *   พร้อม movement `out`/`in` คู่กัน (ยอดเปลี่ยนจึงต้องมีประวัติ — ไม่เหมือนย้ายทั้งล็อต)
+ * - ปลายทางต้องมีอยู่จริงและใช้งานอยู่ (จุดพักใช้เลือกไม่ได้) · ล็อตยอด 0 ย้ายได้ทั้งล็อต (ประวัติอยู่ครบ)
+ */
+export function moveLot(lotId, locationId, quantity = null) {
+  const lot = requireLot(lotId);
+  const location = state.locations.find((entry) => entry.id === locationId);
+  if (!location) throw new ValidationError({ locationId: 'ไม่พบจุดเก็บปลายทาง' });
+  if (location.isActive === false) throw new ValidationError({ locationId: 'จุดเก็บนี้พักใช้อยู่ — เลือกจุดอื่น' });
+  if (lot.locationId === locationId) return lot;
+
+  const now = new Date().toISOString();
+  const available = Math.max(0, Number(lot.quantity) || 0);
+  if (quantity === null || quantity === undefined || quantity === '') {
+    lot.locationId = locationId;
+    lot.updatedAt = now;
+    commit();
+    return lot;
+  }
+
+  const qty = Number(quantity);
+  if (!Number.isFinite(qty) || qty <= 0) throw new ValidationError({ quantity: 'จำนวนที่ย้ายต้องมากกว่า 0' });
+  if (qty > available) throw new ValidationError({ quantity: `ย้ายได้ไม่เกินที่มี (${available})` });
+  if (qty === available) {
+    lot.locationId = locationId;
+    lot.updatedAt = now;
+    commit();
+    return lot;
+  }
+
+  lot.quantity = available - qty;
+  syncUsedUpQuantity(lot, available);
+  lot.updatedAt = now;
+  pushMovement(lot, 'out', -qty, now, `ย้ายไป${location.name}`);
+
+  let target = state.lots.find(
+    (entry) =>
+      entry.productId === lot.productId &&
+      entry.locationId === locationId &&
+      (entry.expiryDate ?? null) === (lot.expiryDate ?? null),
+  );
+  if (target) {
+    const before = Math.max(0, Number(target.quantity) || 0);
+    target.quantity = before + qty;
+    syncUsedUpQuantity(target, before);
+    target.updatedAt = now;
+    pushMovement(target, 'in', qty, now, `ย้ายมาจาก${state.locations.find((entry) => entry.id === lot.locationId)?.name ?? ''}`);
+  } else {
+    target = {
+      id: newId('lot'),
+      productId: lot.productId,
+      locationId,
+      quantity: qty,
+      usedUpQuantity: 0,
+      expiryDate: lot.expiryDate ?? null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    state.lots.push(target);
+    pushMovement(target, 'in', qty, now, `ย้ายมาจาก${state.locations.find((entry) => entry.id === lot.locationId)?.name ?? ''}`);
+  }
+  commit();
+  return target;
 }
 
 /** ล็อตที่ใช้หมดแล้ว (ยอด 0) พร้อมสินค้าและวันที่ใช้หมด — แทนตาราง usedUp เดิม */
@@ -352,7 +424,9 @@ export function listMovements(filter = {}) {
 
 /* -------------------------------------------------------------- Locations */
 
-export function listLocations() {
+/** จุดเก็บทั้งหมด หรือกรอง { activeOnly: true } = เฉพาะที่ใช้งาน (ใช้ใน dropdown รับของใหม่) */
+export function listLocations(filter = {}) {
+  if (filter?.activeOnly) return state.locations.filter((location) => location.isActive !== false);
   return state.locations.slice();
 }
 
@@ -369,7 +443,7 @@ export function addLocation(name) {
     throw new ValidationError({ name: 'มีจุดเก็บชื่อนี้อยู่แล้ว' });
   }
 
-  const location = { id: newId('loc'), name: value, createdAt: new Date().toISOString() };
+  const location = { id: newId('loc'), name: value, isActive: true, createdAt: new Date().toISOString() };
   state.locations.push(location);
   commit();
   return location;
@@ -391,7 +465,16 @@ export function renameLocation(id, name) {
   return location;
 }
 
-/** ลบจุดเก็บ — ห้ามลบถ้ายังมีของอ้างอยู่ (US-004) */
+/** พักใช้/เปิดใช้จุดเก็บ (R002 · แทนลบถาวรในจอ) — พักได้แม้มีของค้าง ของเดิม/ประวัติอยู่ครบ */
+export function setLocationActive(id, active) {
+  const location = state.locations.find((entry) => entry.id === id);
+  if (!location) throw new Error('ไม่พบจุดเก็บนี้');
+  location.isActive = active !== false;
+  commit();
+  return location;
+}
+
+/** ลบจุดเก็บ — ห้ามลบถ้ายังมีของอ้างอยู่ (US-004) · R002 ไม่เรียกจากจอ (คงไว้ให้เทสต์/ประวัติ) */
 export function deleteLocation(id) {
   if (!state.locations.some((location) => location.id === id)) throw new Error('ไม่พบจุดเก็บนี้');
   const count = countLotsInLocation(id);
@@ -404,7 +487,9 @@ export function deleteLocation(id) {
 
 /* ------------------------------------------------------------- Categories */
 
-export function listCategories() {
+/** หมวดหมู่ทั้งหมด หรือกรอง { activeOnly: true } = เฉพาะที่ใช้งาน */
+export function listCategories(filter = {}) {
+  if (filter?.activeOnly) return state.categories.filter((category) => category.isActive !== false);
   return state.categories.slice();
 }
 
@@ -421,7 +506,7 @@ export function addCategory(name) {
     throw new ValidationError({ name: 'มีหมวดหมู่นี้อยู่แล้ว' });
   }
 
-  const category = { id: newId('cat'), name: value, createdAt: new Date().toISOString() };
+  const category = { id: newId('cat'), name: value, isActive: true, createdAt: new Date().toISOString() };
   state.categories.push(category);
   commit();
   return category;
@@ -443,7 +528,16 @@ export function renameCategory(id, name) {
   return category;
 }
 
-/** ลบหมวดหมู่ — ห้ามลบถ้ายังมีสินค้าอ้างอยู่ (US-004 ใช้กฎร่วมกับจุดเก็บ) */
+/** พักใช้/เปิดใช้หมวดหมู่ (R002 · แทนลบถาวรในจอ) */
+export function setCategoryActive(id, active) {
+  const category = state.categories.find((entry) => entry.id === id);
+  if (!category) throw new Error('ไม่พบหมวดหมู่นี้');
+  category.isActive = active !== false;
+  commit();
+  return category;
+}
+
+/** ลบหมวดหมู่ — ห้ามลบถ้ายังมีสินค้าอ้างอยู่ (US-004 ใช้กฎร่วมกับจุดเก็บ) · R002 ไม่เรียกจากจอ */
 export function deleteCategory(id) {
   if (!state.categories.some((category) => category.id === id)) throw new Error('ไม่พบหมวดหมู่นี้');
   const count = countProductsInCategory(id);
@@ -540,6 +634,18 @@ export function recalculateUsedUpQuantities(filter = {}) {
 
   if (changes.length) commit();
   return { checked: lots.length, fixed: changes.length, skipped, changes };
+}
+
+/* ------------------------------------------------- ย้อนกลับ 1 ขั้น (R005 · US-003) */
+
+/**
+ * คืน state ทั้งก้อนจากภาพจำ (สแนปช็อตที่ undo.js เก็บไว้ก่อนคำสั่งเปลี่ยนยอด)
+ * ใช้ย้อนกลับขั้นเดียวอันล่าสุดเท่านั้น — เรียกแล้วภาพจำนั้นหมดอายุ (undo.js เป็นผู้ทิ้ง)
+ */
+export function restoreState(snapshot) {
+  state = JSON.parse(JSON.stringify(snapshot));
+  commit();
+  return state;
 }
 
 /* ------------------------------------------------------- สำเนาข้อมูลเดิม (D8) */

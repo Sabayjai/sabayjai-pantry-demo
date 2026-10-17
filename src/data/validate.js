@@ -42,8 +42,10 @@ export function validateProductInput(input = {}, ctx = {}) {
 
   const categoryId = input.categoryId ?? null;
   if (categoryId) {
-    if (Array.isArray(ctx.categories) && !ctx.categories.some((category) => category.id === categoryId)) {
-      errors.categoryId = 'ไม่พบหมวดหมู่ที่เลือก';
+    if (Array.isArray(ctx.categories)) {
+      const category = ctx.categories.find((entry) => entry.id === categoryId);
+      if (!category) errors.categoryId = 'ไม่พบหมวดหมู่ที่เลือก';
+      else if (category.isActive === false) errors.categoryId = 'หมวดหมู่นี้พักใช้อยู่ — เลือกหมวดอื่น';
     }
   }
 
@@ -69,8 +71,10 @@ export function validateReceiveInput(input = {}, ctx = {}) {
 
   const locationId = String(input.locationId ?? '').trim();
   if (!locationId) errors.locationId = 'เลือกจุดเก็บ';
-  else if (Array.isArray(ctx.locations) && !ctx.locations.some((location) => location.id === locationId)) {
-    errors.locationId = 'ไม่พบจุดเก็บที่เลือก';
+  else if (Array.isArray(ctx.locations)) {
+    const location = ctx.locations.find((entry) => entry.id === locationId);
+    if (!location) errors.locationId = 'ไม่พบจุดเก็บที่เลือก';
+    else if (location.isActive === false) errors.locationId = 'จุดเก็บนี้พักใช้อยู่ — เลือกจุดอื่น';
   }
 
   const expiryDate = input.expiryDate ?? null;

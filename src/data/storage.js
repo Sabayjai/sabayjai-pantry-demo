@@ -235,7 +235,7 @@ function readExpiryDate(value) {
   return parseDateOnly(value) ? String(value).trim() : null;
 }
 
-/** จุดเก็บ/หมวดหมู่ — { id, name } เท่านั้นที่ผ่าน · id ซ้ำถูกตัด */
+/** จุดเก็บ/หมวดหมู่ — { id, name, isActive } · ข้อมูลเก่าที่ไม่มี isActive = ใช้งาน (true) · id ซ้ำถูกตัด */
 function normalizeNamedList(raw, fallbackAt, report, label) {
   const seen = new Set();
   const list = [];
@@ -255,7 +255,12 @@ function normalizeNamedList(raw, fallbackAt, report, label) {
       continue;
     }
     seen.add(id);
-    list.push({ id, name, createdAt: readTimestamp(entry.createdAt, fallbackAt) });
+    list.push({
+      id,
+      name,
+      isActive: entry.isActive === false ? false : true,
+      createdAt: readTimestamp(entry.createdAt, fallbackAt),
+    });
   }
   return list;
 }

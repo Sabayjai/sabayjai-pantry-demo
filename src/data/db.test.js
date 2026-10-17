@@ -239,6 +239,31 @@ describe('db · Locations & Categories (US-004)', () => {
     expect(() => db.deleteCategory('cat-ready')).toThrow(ReferencedError);
   });
 
+  it('R002 · พักใช้ได้แม้มีของ · ของเดิมอยู่ครบ · รับของใหม่เข้าที่พักใช้ไม่ได้', async () => {
+    const { db, ValidationError } = await freshModules();
+    expect(db.listLocations().every((entry) => entry.isActive === true)).toBe(true);
+    expect(db.listLocations({ activeOnly: true })).toHaveLength(5);
+
+    db.setLocationActive('loc-fridge', false);
+    expect(db.listLocations()).toHaveLength(5);
+    expect(db.listLocations({ activeOnly: true })).toHaveLength(4);
+    expect(db.countLotsInLocation('loc-fridge')).toBe(3);
+    expect(() =>
+      db.receiveStock({ name: 'ของใหม่', quantity: 1, unit: 'ชิ้น', locationId: 'loc-fridge' }),
+    ).toThrow(ValidationError);
+
+    db.setLocationActive('loc-fridge', true);
+    expect(db.listLocations({ activeOnly: true })).toHaveLength(5);
+
+    db.setCategoryActive('cat-ready', false);
+    expect(db.listCategories({ activeOnly: true })).toHaveLength(3);
+    expect(() =>
+      db.receiveStock({ name: 'ขนมใหม่', quantity: 1, unit: 'ชิ้น', locationId: 'loc-shelf', categoryId: 'cat-ready' }),
+    ).toThrow(ValidationError);
+    db.setCategoryActive('cat-ready', true);
+    expect(() => db.setLocationActive('loc-ไม่มีอยู่', false)).toThrow('ไม่พบจุดเก็บนี้');
+  });
+
   it('เพิ่ม/แก้ชื่อซ้ำไม่ได้ และชื่อว่างไม่ผ่าน', async () => {
     const { db, ValidationError } = await freshModules();
     expect(() => db.addLocation('ตู้เย็น')).toThrow(ValidationError);
@@ -247,6 +272,49 @@ describe('db · Locations & Categories (US-004)', () => {
     expect(db.renameLocation('loc-shelf', 'ชั้นวาง').name).toBe('ชั้นวาง');
     expect(() => db.addCategory('พร้อมกิน')).toThrow(ValidationError);
     expect(() => db.deleteCategory('cat-ไม่มีอยู่')).toThrow('ไม่พบหมวดหมู่นี้');
+  });
+});
+
+describe('db · ย้ายของระหว่างจุดเก็บ (US-009)', () => {
+  it('ย้ายทั้งล็อต: ยอดไม่เปลี่ยน + ไม่เขียน movement', async () => {
+    const { db } = await freshModules();
+    const before = db.listMovements({ lotId: 'lot-rice-1' }).length;
+    const moved = db.moveLot('lot-rice-1', 'loc-shelf');
+    expect(moved.locationId).toBe('loc-shelf');
+    expect(moved.quantity).toBe(2);
+    expect(db.listMovements({ lotId: 'lot-rice-1' })).toHaveLength(before);
+    expect(db.countLotsInLocation('loc-pantry')).toBe(0);
+  });
+
+  it('ย้ายบางส่วน: ล็อตเดิมลด + ล็อตปลายทางเพิ่ม + มี movement คู่', async () => {
+    const { db } = await freshModules();
+    const target = db.moveLot('lot-rice-1', 'loc-shelf', 1);
+    expect(db.getLot('lot-rice-1').quantity).toBe(1);
+    expect(target.quantity).toBe(1);
+    expect(target.expiryDate).toBeNull();
+    expect(db.listMovements({ lotId: 'lot-rice-1' }).at(-1)).toMatchObject({ type: 'out', delta: -1 });
+    expect(db.listMovements({ lotId: target.id }).at(-1)).toMatchObject({ type: 'in', delta: 1 });
+  });
+
+  it('ย้ายบางส่วนไปจุดที่มี batch เดียวกันอยู่แล้ว → รวมเข้าล็อตเดิม', async () => {
+    const { db } = await freshModules();
+    db.receiveStock({ name: 'ข้าวสาร', quantity: 5, unit: 'ถุง', locationId: 'loc-shelf' });
+    const shelfLot = db.listLots({ locationId: 'loc-shelf' }).find((lot) => lot.productId === 'prod-rice');
+    const merged = db.moveLot('lot-rice-1', 'loc-shelf', 1);
+    expect(merged.id).toBe(shelfLot.id);
+    expect(merged.quantity).toBe(6);
+    expect(db.getLot('lot-rice-1').quantity).toBe(1);
+  });
+
+  it('ปลายทางไม่มี/พักใช้/จำนวนเกิน → ValidationError · ย้ายเข้าที่เดิม = ไม่ทำอะไร', async () => {
+    const { db, ValidationError } = await freshModules();
+    expect(() => db.moveLot('lot-rice-1', 'loc-ไม่มีอยู่')).toThrow(ValidationError);
+    expect(() => db.moveLot('lot-ไม่มีอยู่', 'loc-shelf')).toThrow('ไม่พบล็อตนี้');
+    db.setLocationActive('loc-shelf', false);
+    expect(() => db.moveLot('lot-rice-1', 'loc-shelf')).toThrow(ValidationError);
+    expect(() => db.moveLot('lot-rice-1', 'loc-freezer', 99)).toThrow(ValidationError);
+    expect(() => db.moveLot('lot-rice-1', 'loc-freezer', 0)).toThrow(ValidationError);
+    expect(db.moveLot('lot-rice-1', 'loc-pantry').quantity).toBe(2);
   });
 });
 
