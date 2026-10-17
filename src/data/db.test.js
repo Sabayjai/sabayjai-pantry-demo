@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { STORAGE_KEY } from './storage.js';
+import { BACKUP_KEY, STORAGE_KEY } from './storage.js';
 
 /**
  * โหลดโมดูลชุดใหม่ต่อเทสต์ เพื่อให้ state ในหน่วยความจำเริ่มจาก seed เสมอ
@@ -414,6 +414,76 @@ describe('db · ความคงอยู่ของข้อมูลแล�
     expect(notified).toBe(1); // จอวาดใหม่หลังกู้คืน
     expect(db.listProducts()).toHaveLength(11);
     expect(db.listProducts().map((product) => product.name)).toContain('ขนมปัง');
+  });
+
+  it('ล้างสินค้า ล็อต ประวัติ และรายการต้องซื้อทั้งหมด รวมรายการที่เพิ่มเอง แล้วกู้คืนได้', async () => {
+    const { db } = await freshModules();
+    db.receiveStock({ name: 'ขนมปัง', quantity: 1, unit: 'แพ็ก', locationId: 'loc-pantry' });
+    db.receiveStock({ name: 'นมสด 1 ลิตร', quantity: 2, unit: 'กล่อง', locationId: 'loc-fridge', expiryDate: '2999-12-31' });
+    db.setLotQuantity('lot-milk-1', 2);
+    db.addShopping('ของที่เพิ่มเอง');
+
+    expect(db.listProducts()).toHaveLength(11);
+    expect(db.listLots()).toHaveLength(12);
+    expect(db.listMovements()).toHaveLength(15);
+    expect(db.listShopping()).toHaveLength(3);
+
+    expect(db.clearTransactions()).toEqual({ ok: true, products: 11, lots: 12, movements: 15, shopping: 3 });
+    expect(db.listProducts()).toHaveLength(0);
+    expect(db.listLots()).toHaveLength(0);
+    expect(db.listMovements()).toHaveLength(0);
+    expect(db.listShopping()).toHaveLength(0);
+    expect(db.listLocations()).toHaveLength(5);
+    expect(db.listCategories()).toHaveLength(4);
+    expect(db.backupInfo()).toMatchObject({ reason: 'clear-transactions' });
+
+    vi.resetModules();
+    const reloaded = await import('./db.js');
+    expect(reloaded.listProducts()).toHaveLength(0);
+    expect(reloaded.listLots()).toHaveLength(0);
+    expect(reloaded.listShopping()).toHaveLength(0);
+    expect(reloaded.clearTransactions()).toEqual({ ok: true, products: 0, lots: 0, movements: 0, shopping: 0 });
+    expect(reloaded.restoreBackup().ok).toBe(true);
+    expect(reloaded.listProducts()).toHaveLength(11);
+    expect(reloaded.listLots()).toHaveLength(12);
+    expect(reloaded.listMovements()).toHaveLength(15);
+    expect(reloaded.listShopping()).toHaveLength(3);
+  });
+
+  it('ล้างรายการต้องซื้อได้ แม้สินค้า ล็อต และประวัติถูกล้างไปก่อนแล้ว', async () => {
+    await freshModules();
+    const stored = JSON.parse(globalThis.localStorage.getItem(STORAGE_KEY));
+    stored.products = [];
+    stored.lots = [];
+    stored.movements = [];
+    globalThis.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+
+    vi.resetModules();
+    const db = await import('./db.js');
+    expect(db.listShopping()).toHaveLength(2);
+    expect(db.clearTransactions()).toEqual({ ok: true, products: 0, lots: 0, movements: 0, shopping: 2 });
+    expect(db.listShopping()).toHaveLength(0);
+  });
+
+  it('ไม่ล้างข้อมูลถ้าเก็บสำเนาก่อนล้างไม่สำเร็จ', async () => {
+    const { db } = await freshModules();
+    const setItem = globalThis.localStorage.setItem;
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    globalThis.localStorage.setItem = (key, value) => {
+      if (key === BACKUP_KEY) throw new Error('ที่เก็บเต็ม');
+      return setItem(key, value);
+    };
+
+    try {
+      expect(db.clearTransactions()).toEqual({ ok: false, reason: 'backup-failed' });
+      expect(db.listProducts()).toHaveLength(10);
+      expect(db.listLots()).toHaveLength(10);
+      expect(db.listMovements()).toHaveLength(12);
+      expect(db.listShopping()).toHaveLength(2);
+    } finally {
+      globalThis.localStorage.setItem = setItem;
+      warning.mockRestore();
+    }
   });
 
   it('ยังไม่มีสำเนา → กู้คืนไม่สำเร็จ และข้อมูลปัจจุบันยังอยู่ครบ', async () => {

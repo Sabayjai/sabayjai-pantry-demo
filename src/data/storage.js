@@ -73,6 +73,11 @@ function backupCurrent(reason) {
   return { savedAt, reason };
 }
 
+/** เก็บสำเนาข้อมูลปัจจุบันก่อนคำสั่งล้างข้อมูลจาก db.js */
+export function backupCurrentState(reason) {
+  return backupCurrent(reason);
+}
+
 /** ข้อมูลสำรองล่าสุดที่เก็บไว้ (ไม่คืนเนื้อข้อมูล — ใช้แค่แสดง/ตัดสินใจในจอ) */
 export function readBackupInfo() {
   let raw = null;

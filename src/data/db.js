@@ -10,7 +10,7 @@
  * "ทยอยใช้" = หักยอดล็อตทีละส่วนแบบ FEFO (ล็อตหมดอายุใกล้สุดก่อน)
  * ล็อตยอด 0 จำ "ยอดก่อนหมด" ไว้ที่ `usedUpQuantity` (D10 · คำตอบ ข.) — คำสั่งทุกตัวที่แตะยอดต้องอัปเดตฟิลด์นี้
  */
-import { loadState, readBackupInfo, restoreBackup as restoreStorageBackup, saveState, resetToSeed as resetStorageToSeed } from './storage.js';
+import { backupCurrentState, loadState, readBackupInfo, restoreBackup as restoreStorageBackup, saveState, resetToSeed as resetStorageToSeed } from './storage.js';
 import { bindState, notify } from '../store.js';
 import {
   ReferencedError,
@@ -695,6 +695,27 @@ export function restoreBackup() {
 }
 
 /* ------------------------------------------------------------------ Reset */
+
+/** ล้างสินค้า ล็อต ประวัติ และรายการต้องซื้อทั้งหมด โดยเก็บจุดเก็บ หมวดหมู่ และหน่วยไว้ */
+export function clearTransactions() {
+  const counts = {
+    products: state.products.length,
+    lots: state.lots.length,
+    movements: state.movements.length,
+    shopping: state.shopping.length,
+  };
+
+  if (counts.products || counts.lots || counts.movements || counts.shopping) {
+    if (!backupCurrentState('clear-transactions')) return { ok: false, reason: 'backup-failed' };
+    state.products = [];
+    state.lots = [];
+    state.movements = [];
+    state.shopping = [];
+    commit();
+  }
+
+  return { ok: true, ...counts };
+}
 
 /** คืนค่าข้อมูลตัวอย่างทั้งชุด (OQ-11) — สำรองข้อมูลเดิมไว้ก่อนเสมอ (D8) */
 export function resetToSeed() {
