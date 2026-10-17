@@ -3,29 +3,29 @@
  *
  * มุมรวมของที่ต้องใช้ก่อนในที่เดียว: กลุ่ม "หมดอายุแล้ว" (แดง) มาก่อน
  * กลุ่ม "ใกล้หมดอายุ" (เหลือง) · เรียงในกลุ่มตามวันน้อยสุดก่อน
- * แถวละ 1 ล็อต: ชื่อสินค้า · จำนวน · จุดเก็บ · ป้ายวัน (ใช้สี+ข้อความคู่กันเสมอ)
+ * ใบละ 1 ล็อตด้วย `src/ui/product-card.js` ใบเดียวกับจอรายการ — จัดการได้ครบเหมือนกัน
+ * (stepper ร่างยอด · ย้าย/ทิ้ง/หมด/ประวัติ) · จอนี้เหลือแค่จัดกลุ่ม+เรียง
  */
 import { el } from '../ui/dom.js';
-import { listLots, listLocations, listProducts } from '../data/db.js';
+import { listCategories, listLots, listLocations, listProducts } from '../data/db.js';
 import { daysLeft, expiringLots, expiringSummary, expiryStatus } from '../data/selectors.js';
-import { emptyState, statusBadge, summaryBar } from '../ui/components.js';
+import { emptyState, summaryBar } from '../ui/components.js';
+import { createCardState, lotCard } from '../ui/product-card.js';
+
+/** state ของการ์ดจอนี้ (ร่างยอด+ฟอร์มย้าย เก็บข้าม re-render) — ใบเดียวกับจอรายการ */
+const cardState = createCardState();
 
 export function renderExpiring() {
   const lots = listLots({ activeOnly: true });
   const summary = expiringSummary(lots);
-  const productNames = new Map(listProducts().map((product) => [product.id, product]));
+  const products = new Map(listProducts().map((product) => [product.id, product]));
   const locationNames = new Map(listLocations().map((location) => [location.id, location.name]));
+  const categoryNames = new Map(listCategories().map((category) => [category.id, category.name]));
 
-  const items = expiringLots(lots)
+  const attention = expiringLots(lots)
     .slice()
-    .sort((a, b) => {
-      const order = { expired: 0, expiring: 1 };
-      const diff = (order[expiryStatus(a)] ?? 2) - (order[expiryStatus(b)] ?? 2);
-      if (diff !== 0) return diff;
-      return (daysLeft(a) ?? 0) - (daysLeft(b) ?? 0);
-    });
-
-  if (items.length === 0) {
+    .sort((a, b) => (daysLeft(a) ?? 0) - (daysLeft(b) ?? 0));
+  if (attention.length === 0) {
     return el(
       'section',
       { class: 'view view-expiring' },
@@ -35,27 +35,24 @@ export function renderExpiring() {
     );
   }
 
-  const expired = items.filter((lot) => expiryStatus(lot) === 'expired');
-  const expiring = items.filter((lot) => expiryStatus(lot) === 'expiring');
+  const expired = attention.filter((lot) => expiryStatus(lot) === 'expired');
+  const expiring = attention.filter((lot) => expiryStatus(lot) === 'expiring');
 
-  const row = (lot) => {
-    const product = productNames.get(lot.productId);
-    return el(
-      'li',
-      { class: 'item-row', dataset: { id: lot.id, status: expiryStatus(lot) } },
-      el('span', { class: 'item-name' }, product?.name ?? 'ไม่พบสินค้า'),
-      el(
-        'span',
-        { class: 'item-details' },
-        `${lot.quantity} ${product?.unit ?? 'ชิ้น'} · ${locationNames.get(lot.locationId) ?? 'ไม่ระบุจุดเก็บ'}`,
-      ),
-      statusBadge(lot),
-    );
-  };
-  const group = (title, rows) =>
-    rows.length === 0
+  const group = (title, groupLots) =>
+    groupLots.length === 0
       ? null
-      : el('div', { class: 'expiring-group' }, el('h3', {}, title), el('ul', { class: 'item-list' }, ...rows.map(row)));
+      : el(
+          'div',
+          { class: 'expiring-group' },
+          el('h3', {}, title),
+          el(
+            'div',
+            { class: 'cards' },
+            ...groupLots.map((lot) =>
+              lotCard(lot, products.get(lot.productId), locationNames, categoryNames, cardState),
+            ),
+          ),
+        );
 
   return el(
     'section',

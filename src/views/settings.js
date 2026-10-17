@@ -54,7 +54,7 @@ export function renderSettings() {
   const status = el('p', { class: 'view-note', role: 'status' }, lastMessage);
   statusEl = status;
 
-  const resetButton = el('button', { type: 'button', class: 'btn' }, 'รีเซ็ตข้อมูลตัวอย่าง');
+  const resetButton = el('button', { type: 'button', class: 'btn btn-ghost' }, 'รีเซ็ตข้อมูลตัวอย่าง');
   on(resetButton, 'click', () => {
     // ⏳ S3 จะเพิ่ม dialog ยืนยันการรีเซ็ต (แบบร่างข้อ 2.1) — รอบนี้กดแล้วคืนค่า seed ทันที
     setMessage('คืนค่าข้อมูลตัวอย่างแล้ว · เก็บสำเนาข้อมูลเดิมไว้ให้กู้คืนได้ (ดูหัวข้อ "ข้อมูลสำรอง")');
@@ -62,7 +62,7 @@ export function renderSettings() {
   });
 
   const backup = backupInfo();
-  const restoreButton = el('button', { type: 'button', class: 'btn' }, 'กู้คืนข้อมูลเดิม');
+  const restoreButton = el('button', { type: 'button', class: 'btn btn-ghost' }, 'กู้คืนข้อมูลเดิม');
   on(restoreButton, 'click', () => {
     setMessage('กำลังกู้คืนข้อมูลจากสำเนา…');
     const result = restoreBackup();
@@ -73,7 +73,7 @@ export function renderSettings() {
     );
   });
 
-  const recalcButton = el('button', { type: 'button', class: 'btn' }, 'คำนวณจำนวนเดิมใหม่จากประวัติ');
+  const recalcButton = el('button', { type: 'button', class: 'btn btn-ghost' }, 'คำนวณจำนวนเดิมใหม่จากประวัติ');
   on(recalcButton, 'click', () => {
     const result = recalculateUsedUpQuantities();
     setMessage(

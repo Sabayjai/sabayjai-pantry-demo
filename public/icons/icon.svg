@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#1f7a5a"/>
+  <!-- ฝาโถ -->
+  <rect x="156" y="120" width="200" height="36" rx="18" fill="#ffffff"/>
+  <rect x="196" y="92" width="120" height="32" rx="12" fill="#ffffff" opacity="0.85"/>
+  <!-- ตัวโถ -->
+  <path d="M136 192 h240 v36 c0 88 -52 152 -120 152 s-120 -64 -120 -152 z" fill="#ffffff"/>
+  <!-- แถบฉลาก -->
+  <rect x="176" y="272" width="160" height="44" rx="22" fill="#1f7a5a"/>
+  <circle cx="256" cy="294" r="12" fill="#ffffff"/>
+</svg>

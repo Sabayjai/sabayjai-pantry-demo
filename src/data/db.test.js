@@ -135,6 +135,27 @@ describe('db · ทยอยใช้แบบ FEFO (US-003)', () => {
     expect(db.getLot('lot-rice-1').quantity).toBe(1);
   });
 
+  it('discardLot ทิ้งทั้งล็อต → ยอด 0 + movement discard + จำยอดก่อนหมด', async () => {
+    const { db } = await freshModules();
+    const { lot, movement } = db.discardLot('lot-rice-1');
+    expect(lot.quantity).toBe(0);
+    expect(movement).toMatchObject({ type: 'discard', delta: -2, balanceAfter: 0 });
+    expect(lot.usedUpQuantity).toBe(2);
+    expect(db.listUsedUpLots().map((entry) => entry.id)).toContain('lot-rice-1');
+  });
+
+  it('discardLot ทิ้งบางส่วนได้ และตรวจจำนวนผิด/ล็อตผิด', async () => {
+    const { db, ValidationError } = await freshModules();
+    db.discardLot('lot-rice-1', 1);
+    expect(db.getLot('lot-rice-1').quantity).toBe(1);
+    expect(db.listMovements({ lotId: 'lot-rice-1' }).at(-1)).toMatchObject({ type: 'discard', delta: -1 });
+
+    expect(() => db.discardLot('lot-rice-1', 0)).toThrow(ValidationError);
+    expect(() => db.discardLot('lot-rice-1', 99)).toThrow(ValidationError);
+    expect(() => db.discardLot('lot-butter-1')).toThrow(ValidationError); // ล็อตยอด 0 ไม่มีอะไรให้ทิ้ง
+    expect(() => db.discardLot('lot-ไม่มีอยู่')).toThrow('ไม่พบล็อตนี้');
+  });
+
   it('setLotQuantity ตั้งยอดตรง ๆ (clamp ≥ 0) และถึง 0 แล้วเข้า "ใช้หมดแล้ว" อัตโนมัติ', async () => {
     const { db } = await freshModules();
     const emptied = db.setLotQuantity('lot-rice-1', 0);

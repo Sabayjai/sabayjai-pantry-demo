@@ -283,6 +283,32 @@ export function discardProduct(productId, quantity, opts = {}) {
   return consumeProduct(productId, quantity, { ...opts, type: 'discard' });
 }
 
+/**
+ * ทิ้งของทีละล็อต (แยกประวัติ `discard` ไม่ใช่ `out`) — ไม่ระบุ quantity = ทิ้งทั้งล็อต
+ * ล็อตยอด 0 แล้วไม่มีอะไรให้ทิ้ง · ทิ้งหมดแล้วยอดก่อนหมดถูกจำไว้ที่ usedUpQuantity เช่นกัน
+ * @returns {{ lot, movement }}
+ */
+export function discardLot(lotId, quantity = null) {
+  const lot = requireLot(lotId);
+  const before = Math.max(0, Number(lot.quantity) || 0);
+  if (before <= 0) throw new ValidationError({ quantity: 'ไม่มีของให้ทิ้ง' });
+
+  let take = before;
+  if (quantity !== null && quantity !== undefined && quantity !== '') {
+    take = Number(quantity);
+    if (!Number.isFinite(take) || take <= 0) throw new ValidationError({ quantity: 'จำนวนที่ทิ้งต้องมากกว่า 0' });
+    if (take > before) throw new ValidationError({ quantity: `ทิ้งได้ไม่เกินที่มี (${before})` });
+  }
+
+  const now = new Date().toISOString();
+  lot.quantity = before - take;
+  syncUsedUpQuantity(lot, before);
+  lot.updatedAt = now;
+  const movement = pushMovement(lot, 'discard', -take, now);
+  commit();
+  return { lot, movement };
+}
+
 /** ตั้งยอดล็อตตรง ๆ (นับสต็อกจริง) — ติดลบไม่ได้ · 0 = ใช้หมดแล้ว */
 export function setLotQuantity(lotId, quantity) {
   const lot = requireLot(lotId);

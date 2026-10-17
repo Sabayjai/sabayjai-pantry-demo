@@ -15,7 +15,7 @@ import {
 } from '../data/db.js';
 import { ValidationError } from '../data/validate.js';
 import { notify } from '../store.js';
-import { activeBadge, confirmDialog, emptyState, filterChips } from '../ui/components.js';
+import { activeBadge, confirmDialog, emptyState, filterChips, iconButton } from '../ui/components.js';
 
 let filter = 'all';
 let adding = false;
@@ -152,18 +152,17 @@ function categoryCard(category) {
 
   if (editingId === category.id) return editCard(category);
 
-  const renameButton = el('button', { type: 'button', class: 'btn btn-ghost' }, 'แก้ชื่อ');
+  const renameButton = iconButton('✏️', 'แก้ชื่อ', { ariaLabel: `แก้ชื่อหมวดหมู่ “${category.name}”` });
   on(renameButton, 'click', () => {
     editingId = category.id;
     editErrors.delete(category.id);
     notify();
   });
 
-  const toggleButton = el(
-    'button',
-    { type: 'button', class: isActive ? 'btn btn-danger' : 'btn btn-primary' },
-    isActive ? 'พักใช้' : 'เปิดใช้',
-  );
+  const toggleButton = iconButton(isActive ? '⏸' : '▶️', isActive ? 'พักใช้' : 'เปิดใช้', {
+    variant: isActive ? 'danger' : 'primary',
+    ariaLabel: isActive ? `พักใช้หมวด “${category.name}”` : `เปิดใช้หมวด “${category.name}”`,
+  });
   on(toggleButton, 'click', () => {
     if (isActive) {
       const countText = count > 0 ? ` สินค้าในหมวดนี้ ${count} รายการยังอยู่ครบ แค่ไม่ให้เลือกตอนเพิ่มของใหม่` : '';

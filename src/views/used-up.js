@@ -7,7 +7,7 @@
  */
 import { el, on } from '../ui/dom.js';
 import { notify } from '../store.js';
-import { listUsedUpLots, restoreLot } from '../data/db.js';
+import { listMovements, listUsedUpLots, restoreLot } from '../data/db.js';
 import { ValidationError } from '../data/validate.js';
 import { emptyState, showToast } from '../ui/components.js';
 
@@ -16,20 +16,35 @@ function usedUpRow(entry) {
   const name = entry.product?.name ?? 'ไม่พบสินค้า';
   const unit = entry.product?.unit ?? 'ชิ้น';
   const date = String(entry.usedUpAt ?? '').slice(0, 10);
-  const qtyLine = `เคยมียอด ${entry.usedUpQuantity} ${unit} · ใช้หมดเมื่อ ${date}`;
+  // เหตุผลที่หมด: movement ตัวสุดท้ายของล็อตเป็น discard = ทิ้ง ไม่งั้น = ใช้หมด (อ่านจากประวัติ ไม่ต้องเก็บฟิลด์เพิ่ม)
+  const discarded = listMovements({ lotId: entry.id }).at(-1)?.type === 'discard';
+  const qtyLine = discarded
+    ? `ทิ้ง ${entry.usedUpQuantity} ${unit} เมื่อ ${date}`
+    : `เคยมียอด ${entry.usedUpQuantity} ${unit} · ใช้หมดเมื่อ ${date}`;
+  const reasonBadge = el(
+    'span',
+    { class: discarded ? 'badge badge-danger' : 'badge badge-fresh', dataset: { status: discarded ? 'discarded' : 'used-up' } },
+    discarded ? 'ทิ้ง' : 'ใช้หมด',
+  );
 
   const qtyInput = el('input', {
     type: 'number',
+    id: `used-up-qty-${entry.id}`,
     min: '1',
     step: '1',
     value: String(Math.max(entry.usedUpQuantity, 1)),
-    'aria-label': `จำนวน “${name}” ที่นำกลับเข้ารายการ`,
   });
+  const qtyField = el(
+    'div',
+    { class: 'field field-inline' },
+    el('label', { for: `used-up-qty-${entry.id}` }, `จำนวนที่นำกลับ (${unit})`),
+    qtyInput,
+  );
   const errorEl = el('p', { class: 'field-error', role: 'alert' });
   errorEl.style.display = 'none';
   const confirmButton = el('button', { type: 'button', class: 'btn btn-primary' }, 'นำกลับ');
   const cancelButton = el('button', { type: 'button', class: 'btn btn-ghost' }, 'ยกเลิก');
-  const form = el('div', { class: 'inline-form' }, qtyInput, errorEl, el('div', { class: 'form-row' }, confirmButton, cancelButton));
+  const form = el('div', { class: 'inline-form' }, qtyField, errorEl, el('div', { class: 'form-row' }, confirmButton, cancelButton));
   form.style.display = 'none';
 
   const restoreButton = el('button', { type: 'button', class: 'btn btn-ghost' }, 'นำกลับเข้ารายการ');
@@ -55,11 +70,11 @@ function usedUpRow(entry) {
   });
 
   return el(
-    'li',
-    { class: 'item-row', dataset: { id: entry.id } },
-    el('span', { class: 'item-name' }, name),
-    el('span', { class: 'item-details' }, qtyLine),
-    restoreButton,
+    'article',
+    { class: 'card', dataset: { id: entry.id, status: discarded ? 'discarded' : 'used-up' } },
+    el('div', { class: 'card-top' }, el('h3', { class: 'card-name' }, name), reasonBadge),
+    el('p', { class: 'card-meta' }, qtyLine),
+    el('div', { class: 'card-actions' }, restoreButton),
     form,
   );
 }
@@ -79,6 +94,6 @@ export function renderUsedUp() {
     { class: 'view view-used-up' },
     el('h2', {}, 'ใช้หมดแล้ว'),
     el('p', { class: 'view-note' }, `มี ${entries.length} รายการ · ไม่ปนกับของที่ยังมีอยู่`),
-    el('ul', { class: 'item-list' }, ...entries.map(usedUpRow)),
+    el('div', { class: 'cards' }, ...entries.map(usedUpRow)),
   );
 }

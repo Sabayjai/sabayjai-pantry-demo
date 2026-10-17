@@ -34,6 +34,22 @@ try {
   // sessionStorage ใช้ไม่ได้ (เช่น โหมดส่วนตัวบางเบราว์เซอร์) — ข้ามสรุปไป ไม่พังแอป
 }
 
+// ลงทะเบียน service worker (R008 · PWA/ออฟไลน์) — เฉพาะบิลด์จริงผ่าน http(s) เท่านั้น
+// dev ไม่ลง (กันแคชเก่าบัง HMR) · file:// หรือเบราว์เซอร์เก่า ข้ามไปเงียบ ๆ ไม่พังแอป
+try {
+  if (
+    import.meta.env?.PROD &&
+    'serviceWorker' in navigator &&
+    (location.protocol === 'http:' || location.protocol === 'https:')
+  ) {
+    globalThis.addEventListener('load', () => {
+      navigator.serviceWorker.register(new URL('sw.js', document.baseURI)).catch(() => {});
+    });
+  }
+} catch {
+  // ลงทะเบียนไม่ได้ — แอปยังใช้ได้ปกติ แค่ออฟไลน์รอบสองไม่ได้
+}
+
 // หลักฐานเกณฑ์ OQ-14 (เห็นรายการภายใน 1 วินาที) — อ่านค่าได้จากคอนโซลเบราว์เซอร์
 const renderedMs = Math.round(performance.now());
 console.info(`[sabayjai] เรนเดอร์จอแรกเสร็จที่ ${renderedMs} ms หลังเริ่มโหลด (เกณฑ์ 1000 ms)`);

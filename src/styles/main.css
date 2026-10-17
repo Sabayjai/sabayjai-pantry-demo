@@ -493,7 +493,9 @@ textarea:focus-visible {
   color: var(--sj-text-muted);
 }
 
-.filter-row select {
+/* select ที่มี .select-chevron วางทับ (ตัวกรองจอรายการ + ฟอร์มย้ายในการ์ด) — ต้องซ่อนลูกศรเดิมไม่งั้นซ้อนสองอัน */
+.filter-row select,
+.inline-form select {
   min-width: 0;
   width: 100%;
   min-height: var(--sj-tap);
@@ -830,6 +832,63 @@ textarea:focus-visible {
 .item-row[data-status="expiring"] .item-status {
   color: var(--sj-warn);
   font-weight: 600;
+}
+
+/* ปุ่มจัดการในแถวจอต้องใช้ก่อน — ขึ้นบรรทัดใหม่เต็มแถว ไม่เบียดชื่อ/ป้าย (R008) */
+.item-row .stepper {
+  flex-basis: 100%;
+  margin-top: 0;
+}
+
+.item-row .card-move {
+  flex-basis: 100%;
+}
+
+/* ---------- ชุดกิจกรรม + ไทม์ไลน์ประวัติของการ์ดสินค้า ---------- */
+
+/* ปุ่มไอคอน+คำสั้น — กะทัดรัดกว่าปุ่มข้อความเต็ม แต่ยังมีคำไทยกำกับ (ข้อ 4.2) */
+.btn-activity {
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+/* ✓/✕ ในแถว stepper เป็นปุ่มจัตุรัสเท่าปุ่ม −/+ (ความหมายอยู่ใน aria-label + โน้ตใต้แถว) */
+.stepper .btn-activity {
+  min-width: var(--sj-tap);
+}
+
+.history-box {
+  width: 100%;
+}
+
+.history {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  border-top: 1px dashed var(--sj-border);
+  font-size: 13px;
+}
+
+.history li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 6px 0;
+  border-bottom: 1px dotted var(--sj-border);
+}
+
+.history li:last-child {
+  border-bottom: none;
+}
+
+.history .h-date,
+.history .h-balance,
+.history .h-note {
+  color: var(--sj-text-muted);
+}
+
+.history .h-balance {
+  margin-left: auto;
 }
 
 /* ---------- กลุ่มในจอต้องใช้ก่อน (R006) ---------- */

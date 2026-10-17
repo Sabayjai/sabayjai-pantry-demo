@@ -17,7 +17,7 @@ import {
 } from '../data/db.js';
 import { ValidationError } from '../data/validate.js';
 import { notify } from '../store.js';
-import { activeBadge, confirmDialog, emptyState, filterChips } from '../ui/components.js';
+import { activeBadge, confirmDialog, emptyState, filterChips, iconButton } from '../ui/components.js';
 
 /** ตัวกรองปัจจุบันของจอ — เก็บระดับโมดูลเพราะ router re-render ทั้งจอเมื่อ state เปลี่ยน */
 let filter = 'all';
@@ -165,18 +165,17 @@ function locationCard(location) {
 
   if (editingId === location.id) return editCard(location);
 
-  const renameButton = el('button', { type: 'button', class: 'btn btn-ghost' }, 'แก้ชื่อ');
+  const renameButton = iconButton('✏️', 'แก้ชื่อ', { ariaLabel: `แก้ชื่อจุดเก็บ “${location.name}”` });
   on(renameButton, 'click', () => {
     editingId = location.id;
     editErrors.delete(location.id);
     notify();
   });
 
-  const toggleButton = el(
-    'button',
-    { type: 'button', class: isActive ? 'btn btn-danger' : 'btn btn-primary' },
-    isActive ? 'พักใช้' : 'เปิดใช้',
-  );
+  const toggleButton = iconButton(isActive ? '⏸' : '▶️', isActive ? 'พักใช้' : 'เปิดใช้', {
+    variant: isActive ? 'danger' : 'primary',
+    ariaLabel: isActive ? `พักใช้จุดเก็บ “${location.name}”` : `เปิดใช้จุดเก็บ “${location.name}”`,
+  });
   on(toggleButton, 'click', () => {
     if (isActive) {
       const countText = count > 0 ? ` ของข้างใน ${count} ล็อตยังอยู่ครบ แค่ไม่ให้เติมของใหม่เข้าไป` : '';

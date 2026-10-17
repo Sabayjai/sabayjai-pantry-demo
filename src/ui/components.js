@@ -113,6 +113,125 @@ export function confirmDialog({ title, message, confirmLabel = 'ยืนยั�
   return backdrop;
 }
 
+/**
+ * ปุ่มกิจกรรมแบบไอคอน+คำสั้น (activity set ของการ์ดสินค้า — ⇄ ย้าย · 🗑 ทิ้ง · ⛔ หมด …)
+ * ประหยัดที่แต่ยังมีคำไทยกำกับเสมอ (ข้อ 4.2) · ชื่อเต็มสำหรับโปรแกรมอ่านหน้าจอส่งมาทาง ariaLabel
+ */
+export function iconButton(icon, label, opts = {}) {
+  const variantClass = opts.variant === 'primary' ? 'btn-primary' : opts.variant === 'danger' ? 'btn-danger' : 'btn-ghost';
+  return el(
+    'button',
+    {
+      type: 'button',
+      class: `btn ${variantClass} btn-activity`,
+      'aria-label': opts.ariaLabel ?? label,
+    },
+    el('span', { 'aria-hidden': 'true' }, icon),
+    ` ${label}`,
+  );
+}
+
+/**
+ * stepper แบบร่างยอด (ใช้ร่วมกันทั้งจอรายการระดับสินค้า และจอต้องใช้ก่อนระดับล็อต)
+ * กด −/+ เปลี่ยนแค่ตัวเลขบนจอ (เก็บร่างผ่าน onDraft ให้ view จำข้าม re-render)
+ * กด ✓ บันทึกถึงเรียก onSave(qty, diff) — view เป็นผู้ตัดสต็อกจริง + แจ้ง toast เอง
+ * @returns {{ stepper, saveRow, api: { set(qty: number): void } }} (set ไว้ให้ปุ่ม "หมด" ตั้งร่างเป็น 0)
+ */
+export function draftStepper({ name, unit, total, draft, onDraft, onSave, onCancel }) {
+  let current = draft ?? total;
+  const qtyEl = el('span', { class: 'stepper-qty', 'aria-live': 'polite' }, `${current}`);
+  const noteEl = el('p', { class: 'card-meta' }, '');
+  // ✓/✕ อยู่ในแถว stepper ต่อหลังตัวเลข (pattern เดียวกับปุ่มกิจกรรมอื่น · ไอคอนล้วนแต่มี aria-label เต็ม + โน้ตบอกผลใต้แถว)
+  const saveButton = el('button', { type: 'button', class: 'btn btn-primary btn-activity', 'aria-label': `บันทึกจำนวน ${name}` }, '✓');
+  const cancelButton = el('button', { type: 'button', class: 'btn btn-ghost btn-activity', 'aria-label': `ยกเลิกการแก้จำนวน ${name}` }, '✕');
+  const saveRow = el('div', { class: 'card-move draft-row' }, noteEl);
+
+  function sync() {
+    qtyEl.textContent = `${current}`;
+    const dirty = current !== total;
+    saveButton.style.display = dirty ? '' : 'none';
+    cancelButton.style.display = dirty ? '' : 'none';
+    if (!dirty) {
+      onDraft(null);
+      saveRow.style.display = 'none';
+      return;
+    }
+    noteEl.textContent = current === 0 ? `จะใช้ “${name}” หมด` : `จะเปลี่ยน ${total} → ${current} ${unit}`;
+    saveRow.style.display = '';
+  }
+
+  const minusButton = el('button', { type: 'button', class: 'btn btn-ghost', 'aria-label': `ลด ${name} 1 ${unit} (ยังไม่บันทึก)` }, '−');
+  on(minusButton, 'click', () => {
+    current = Math.max(0, current - 1);
+    onDraft(current === total ? null : current);
+    sync();
+  });
+  const plusButton = el('button', { type: 'button', class: 'btn btn-ghost', 'aria-label': `เพิ่ม ${name} 1 ${unit} (ยังไม่บันทึก)` }, '+');
+  on(plusButton, 'click', () => {
+    current += 1;
+    onDraft(current === total ? null : current);
+    sync();
+  });
+  on(cancelButton, 'click', () => {
+    onCancel();
+  });
+  on(saveButton, 'click', () => {
+    const qty = current;
+    const diff = qty - total;
+    if (diff === 0) {
+      onDraft(null);
+      return;
+    }
+    onSave(qty, diff);
+  });
+  sync();
+
+  const stepper = el(
+    'div',
+    { class: 'stepper', role: 'group', 'aria-label': `ปรับจำนวน ${name}` },
+    minusButton,
+    qtyEl,
+    plusButton,
+    saveButton,
+    cancelButton,
+  );
+
+  return { stepper, saveRow, api: { set(qty) { current = Math.max(0, qty); onDraft(current === total ? null : current); sync(); } } };
+}
+
+/** คำไทยของการเคลื่อนไหวแต่ละประเภท (ไทม์ไลน์ประวัติ + ป้ายเหตุผลมุมใช้หมดแล้ว) */
+export const MOVEMENT_TEXT = {
+  in: 'รับเข้า',
+  out: 'หยิบใช้',
+  discard: 'ทิ้ง',
+  adjust: 'ปรับยอด',
+  restore: 'นำกลับ',
+};
+
+/**
+ * ไทม์ไลน์ประวัติของสินค้าหนึ่งตัว (ใหม่สุดก่อน) — แถวละ movement: วัน · ทำอะไร ±จำนวน · หมายเหตุ · ยอดคงเหลือ
+ * movements มาจาก `listMovements({ productId })` ของชั้นข้อมูล
+ */
+export function historyTimeline(movements, unit) {
+  const rows = (movements ?? []).slice().sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  if (rows.length === 0) return el('p', { class: 'card-meta' }, 'ยังไม่มีประวัติการเคลื่อนไหว');
+  return el(
+    'ul',
+    { class: 'history' },
+    ...rows.map((movement) => {
+      const delta = Number(movement.delta) || 0;
+      return el(
+        'li',
+        {},
+        el('span', { class: 'h-date' }, String(movement.at ?? '').slice(0, 10)),
+        el('span', { class: 'h-action' }, `${MOVEMENT_TEXT[movement.type] ?? movement.type} ${delta > 0 ? '+' : ''}${delta} ${unit}`),
+        movement.note ? el('span', { class: 'h-note' }, movement.note) : null,
+        el('span', { class: 'h-balance' }, `คงเหลือ ${movement.balanceAfter ?? '–'}`),
+      );
+    }),
+  );
+}
+
 /** toast ธรรมดาอ่านอย่างเดียว (R003 · US-001) — ไม่ใช่ undo (undo อยู่ R005) · หายเอง 5 วิ */
 export function showToast(text) {
   document.querySelector('.toast')?.remove();
