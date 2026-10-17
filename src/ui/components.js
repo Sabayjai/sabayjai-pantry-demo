@@ -249,6 +249,11 @@ export function showUndoToast({ message, undoLabel = 'ย้อนกลับ',
   document.querySelector('.toast')?.remove();
   document.querySelector('.undo-toast')?.remove();
   if (window.__sjUndoTimer) clearTimeout(window.__sjUndoTimer);
+  // อันใหม่มาแทนอันเก่า — ถอด listener ของอันเก่าด้วย ไม่งั้น Esc จะไปล้างสิทธิ์ undo ของอันใหม่
+  if (window.__sjUndoKey) {
+    document.removeEventListener('keydown', window.__sjUndoKey);
+    window.__sjUndoKey = null;
+  }
 
   const label = el('span', {}, message);
   const button = el('button', { type: 'button', class: 'btn btn-primary' }, `${undoLabel} (${seconds})`);
@@ -272,11 +277,20 @@ export function showUndoToast({ message, undoLabel = 'ย้อนกลับ',
   const close = (undone) => {
     clearInterval(timer);
     window.__sjUndoTimer = null;
+    if (window.__sjUndoKey) {
+      document.removeEventListener('keydown', window.__sjUndoKey);
+      window.__sjUndoKey = null;
+    }
     toastEl.remove();
     if (undone) onUndo?.();
     else onTimeout?.();
   };
   on(button, 'click', () => close(true));
+  // Esc = ปิดโดยไม่ย้อนกลับ (หมดสิทธิ์ undo เหมือนปล่อยหมดเวลา)
+  window.__sjUndoKey = (event) => {
+    if (event.key === 'Escape') close(false);
+  };
+  document.addEventListener('keydown', window.__sjUndoKey);
   return toastEl;
 }
 
